@@ -7,362 +7,136 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
-    --bg: #f5f6f8;
-    --surface: #ffffff;
-    --surface2: #f0f1f4;
-    --border: rgba(0,0,0,0.08);
-    --text: #1a1d24;
-    --text-secondary: #6b7080;
-    --text-tertiary: #9ba0ae;
-    --blue: #2563eb;
-    --blue-bg: #eff6ff;
-    --green: #16a34a;
-    --green-bg: #f0fdf4;
-    --amber: #d97706;
-    --amber-bg: #fffbeb;
-    --red: #dc2626;
-    --red-bg: #fef2f2;
-    --purple: #7c3aed;
-    --purple-bg: #f5f3ff;
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    --font-mono: 'Consolas', 'Courier New', monospace;
+    --bg:#f5f6f8;--surface:#fff;--surface2:#f0f1f4;--border:rgba(0,0,0,0.08);
+    --text:#1a1d24;--text-secondary:#6b7080;--text-tertiary:#9ba0ae;
+    --blue:#2563eb;--blue-bg:#eff6ff;--green:#16a34a;--green-bg:#f0fdf4;
+    --amber:#d97706;--amber-bg:#fffbeb;--red:#dc2626;--red-bg:#fef2f2;
+    --radius:10px;--radius-sm:6px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+    --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+    --font-mono:'Consolas','Courier New',monospace;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
-
-  /* ── CONFIG PANEL ── */
-  #configPanel {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
-  }
-  #configBox {
-    background: var(--surface); border-radius: var(--radius); padding: 2rem;
-    width: min(480px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  }
-  #configBox h2 { font-size: 18px; font-weight: 600; margin-bottom: .4rem; }
-  #configBox p { font-size: 12px; color: var(--text-secondary); margin-bottom: 1.4rem; line-height: 1.5; }
-  .cfg-field { margin-bottom: 1rem; }
-  .cfg-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .35rem; }
-  .cfg-field input, .cfg-field select {
-    width: 100%; padding: 8px 10px; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-mono);
-    background: var(--surface2); color: var(--text); outline: none;
-  }
-  .cfg-field input:focus { border-color: var(--blue); background: var(--surface); }
-  .cfg-note { font-size: 11px; color: var(--text-tertiary); margin-top: .3rem; line-height: 1.4; }
-  .mode-tab { flex:1; padding:.55rem .4rem; border:none; background:transparent; cursor:pointer; font-size:11px; font-family:var(--font); line-height:1.4; color:var(--text-secondary); border-right:1px solid var(--border); transition:background .15s,color .15s; }
-  .mode-tab:last-child { border-right:none; }
-  .mode-tab.active { background:var(--blue); color:#fff; }
-  .mode-tab small { display:block; font-size:10px; opacity:.8; }
-  .cfg-callout { font-size:12px; line-height:1.5; padding:.7rem .9rem; border-radius:var(--radius-sm); margin-bottom:1rem; }
-  .cfg-callout-blue  { background:var(--blue-bg);   color:#1d4ed8; border:1px solid #bfdbfe; }
-  .cfg-callout-amber { background:var(--amber-bg);  color:#92400e; border:1px solid #fde68a; }
-  .cfg-callout-green { background:var(--green-bg);  color:#166534; border:1px solid #bbf7d0; }
-  .cfg-btns { display: flex; gap: 8px; margin-top: 1.4rem; }
-  .btn-primary {
-    flex: 1; padding: 9px; background: var(--blue); color: #fff;
-    border: none; border-radius: var(--radius-sm); font-size: 13px;
-    font-weight: 500; cursor: pointer; transition: opacity .15s;
-  }
-  .btn-primary:hover { opacity: .88; }
-  .btn-secondary {
-    padding: 9px 16px; background: var(--surface2); color: var(--text-secondary);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 13px; cursor: pointer;
-  }
-
-  /* ── HEADER ── */
-  header {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 1.5rem; height: 52px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 50;
-  }
-  .header-left { display: flex; align-items: center; gap: 10px; }
-  .header-logo {
-    width: 28px; height: 28px; background: var(--blue); border-radius: 6px;
-    display: flex; align-items: center; justify-content: center; color: #fff;
-    font-size: 14px; font-weight: 700; flex-shrink: 0;
-  }
-  .header-title { font-size: 14px; font-weight: 600; }
-  .header-sub { font-size: 11px; color: var(--text-secondary); }
-  .header-right { display: flex; align-items: center; gap: 8px; }
-  .last-update { font-size: 11px; color: var(--text-tertiary); }
-  .btn-refresh {
-    display: flex; align-items: center; gap: 5px; padding: 6px 12px;
-    background: var(--blue-bg); color: var(--blue); border: none;
-    border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
-    cursor: pointer; transition: background .15s;
-  }
-  .btn-refresh:hover { background: #dbeafe; }
-  .btn-refresh.loading svg { animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .btn-cfg {
-    display: flex; align-items: center; gap: 5px; padding: 6px 12px;
-    background: var(--surface2); color: var(--text-secondary); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 12px; cursor: pointer;
-  }
-
-  /* ── MAIN ── */
-  main { padding: 1.25rem 1.5rem; max-width: 1400px; margin: 0 auto; }
-
-  /* ── ERROR / STATUS BAR ── */
-  #statusBar {
-    background: var(--red-bg); color: var(--red); border: 1px solid #fecaca;
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem;
-    font-size: 12px; display: none;
-  }
-  #loadingBar {
-    background: var(--blue-bg); color: var(--blue); border: 1px solid #bfdbfe;
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem;
-    font-size: 12px; display: none; align-items: center; gap: 8px;
-  }
-  .spinner { width: 14px; height: 14px; border: 2px solid #bfdbfe; border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
-
-  /* ── KPI GRID ── */
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
-  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow); }
-  .kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin-bottom: 6px; }
-  .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-  .kpi-sub { font-size: 10px; color: var(--text-tertiary); line-height: 1.4; }
-  .kpi-card.danger .kpi-value { color: var(--red); }
-  .kpi-card.warn .kpi-value { color: var(--amber); }
-  .kpi-card.ok .kpi-value { color: var(--green); }
-
-  /* ── CHARTS ── */
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
-  .chart-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 10px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-secondary); }
-  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-
-  /* ── TABLE ── */
-  .table-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .table-header { padding: .85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .table-header-left { display: flex; align-items: center; gap: 10px; }
-  .table-title { font-size: 13px; font-weight: 600; }
-  .count-chip { font-size: 10px; background: var(--surface2); border-radius: 20px; padding: 2px 8px; color: var(--text-secondary); border: 1px solid var(--border); }
-  .tab-row { display: flex; gap: 4px; }
-  .tab-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: var(--font); transition: all .15s; }
-  .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-  .table-filters { padding: .6rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; background: var(--surface2); }
-  .table-filters select { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font); }
-  .table-filters input[type="date"] { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font); }
-  .filter-label { font-size: 10px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
-  .filter-label span { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-  .btn-clear-dates { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
-  .btn-clear-dates:hover { background: var(--surface); }
-  .tbl-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; cursor: pointer; user-select: none; background: var(--surface2); }
-  th:hover { color: var(--text); }
-  th .sa { margin-left: 3px; opacity: .35; font-size: 9px; }
-  th.sorted .sa { opacity: 1; }
-  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-  .badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
-  .b-highest { background: #fef2f2; color: #b91c1c; }
-  .b-high { background: #fff7ed; color: #c2410c; }
-  .b-medium { background: #fffbeb; color: #b45309; }
-  .b-low { background: #eff6ff; color: #1d4ed8; }
-  .b-open { background: #eff6ff; color: #1d4ed8; }
-  .b-wait { background: #f5f3ff; color: #6d28d9; }
-  .b-closed { background: #f0fdf4; color: #15803d; }
-  .b-breach { background: #fef2f2; color: #b91c1c; }
-  .b-ok { background: #f0fdf4; color: #15803d; }
-  .b-risk { background: #fffbeb; color: #b45309; }
-  .b-nodata { background: var(--surface2); color: var(--text-tertiary); }
-  .sla-wrap { display: flex; align-items: center; gap: 6px; min-width: 120px; }
-  .sla-bg { flex: 1; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
-  .sla-fill { height: 100%; border-radius: 2px; }
-  .key-link { color: var(--blue); font-weight: 600; text-decoration: none; font-size: 11px; font-family: var(--font-mono); }
-  .key-link:hover { text-decoration: underline; }
-  .auto-refresh-label { font-size: 10px; color: var(--text-tertiary); }
-
-  /* ── FOOTER NOTE ── */
-  .footnote { font-size: 10px; color: var(--text-tertiary); padding: .75rem 1rem; border-top: 1px solid var(--border); line-height: 1.6; background: var(--surface2); }
-
-  /* ── AVERAGES SECTION ── */
-  .avg-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.25rem; }
-  .avg-section-header { padding: .85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .avg-section-title { font-size: 13px; font-weight: 600; }
-  .avg-section-sub { font-size: 11px; color: var(--text-secondary); }
-  .avg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; }
-  .avg-card { padding: 1.1rem 1.25rem; border-right: 1px solid var(--border); position: relative; }
-  .avg-card:last-child { border-right: none; }
-  .avg-card-prio { display: flex; align-items: center; gap: 8px; margin-bottom: .9rem; }
-  .avg-prio-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-  .avg-count { font-size: 11px; color: var(--text-tertiary); }
-  .avg-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .avg-metric { background: var(--surface2); border-radius: var(--radius-sm); padding: .65rem .8rem; position: relative; overflow: hidden; }
-  .avg-metric-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 4px; }
-  .avg-metric-value { font-size: 20px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
-  .avg-metric-limit { font-size: 10px; color: var(--text-tertiary); }
-  .avg-metric-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
-  .avg-metric-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
-  .avg-breach-row { display: flex; gap: 6px; margin-top: .65rem; flex-wrap: wrap; }
-  .avg-breach-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
-  .avg-no-data { color: var(--text-tertiary); font-size: 12px; font-style: italic; }
-  .avg-chart-row { border-top: 1px solid var(--border); padding: 1rem 1.25rem; }
-  .avg-chart-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 10px; }
-  .avg-bar-group { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .avg-bar-label { font-size: 11px; color: var(--text-secondary); width: 65px; flex-shrink: 0; text-align: right; }
-  .avg-bar-track { flex: 1; height: 20px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
-  .avg-bar-fill-h { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; min-width: 4px; transition: width .5s ease; }
-  .avg-bar-sla-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,0.25); border-radius: 1px; }
-  .avg-bar-sla-label { position: absolute; top: -14px; font-size: 9px; color: var(--text-tertiary); transform: translateX(-50%); white-space: nowrap; }
-  @media (max-width: 900px) { .avg-card { border-right: none; border-bottom: 1px solid var(--border); } .avg-card:last-child { border-bottom: none; } }
-
-  @media (max-width: 900px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .charts-row { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    header { padding: 0 1rem; }
-    main { padding: 1rem; }
-    .kpi-grid { grid-template-columns: 1fr 1fr; }
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+  .header-left{display:flex;align-items:center;gap:10px}
+  .header-logo{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
+  .header-title{font-size:14px;font-weight:600}
+  .header-sub{font-size:11px;color:var(--text-secondary)}
+  .header-right{display:flex;align-items:center;gap:8px}
+  .last-update{font-size:11px;color:var(--text-tertiary)}
+  .auto-refresh-label{font-size:10px;color:var(--text-tertiary)}
+  .btn-refresh{display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer}
+  .btn-refresh.loading svg{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  main{padding:1.25rem 1.5rem;max-width:1400px;margin:0 auto}
+  #statusBar{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;display:none}
+  #loadingBar{background:var(--blue-bg);color:var(--blue);border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;display:none;align-items:center;gap:8px}
+  .spinner{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow)}
+  .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin-bottom:6px}
+  .kpi-value{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+  .kpi-sub{font-size:10px;color:var(--text-tertiary);line-height:1.4}
+  .kpi-card.danger .kpi-value{color:var(--red)}
+  .kpi-card.warn .kpi-value{color:var(--amber)}
+  .charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+  .chart-card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:10px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary)}
+  .leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .avg-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem}
+  .avg-section-header{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+  .avg-section-title{font-size:13px;font-weight:600}
+  .avg-section-sub{font-size:11px;color:var(--text-secondary)}
+  .avg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .avg-card{padding:1.1rem 1.25rem;border-right:1px solid var(--border)}
+  .avg-card:last-child{border-right:none}
+  .avg-card-prio{display:flex;align-items:center;gap:8px;margin-bottom:.9rem}
+  .avg-prio-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .avg-count{font-size:11px;color:var(--text-tertiary)}
+  .avg-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .avg-metric{background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .8rem}
+  .avg-metric-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:4px}
+  .avg-metric-value{font-size:20px;font-weight:700;line-height:1;margin-bottom:3px}
+  .avg-metric-limit{font-size:10px;color:var(--text-tertiary)}
+  .avg-metric-bar{height:3px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
+  .avg-metric-bar-fill{height:100%;border-radius:2px}
+  .avg-breach-row{display:flex;gap:6px;margin-top:.65rem;flex-wrap:wrap}
+  .avg-breach-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .avg-chart-row{border-top:1px solid var(--border);padding:1rem 1.25rem}
+  .avg-chart-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:10px}
+  .avg-bar-group{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .avg-bar-label{font-size:11px;color:var(--text-secondary);width:65px;flex-shrink:0;text-align:right}
+  .avg-bar-track{flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+  .avg-bar-fill-h{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;min-width:4px}
+  .avg-bar-sla-line{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,0.25);border-radius:1px}
+  .avg-bar-sla-label{position:absolute;top:-14px;font-size:9px;color:var(--text-tertiary);transform:translateX(-50%);white-space:nowrap}
+  .table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .table-header{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .table-header-left{display:flex;align-items:center;gap:10px}
+  .table-title{font-size:13px;font-weight:600}
+  .count-chip{font-size:10px;background:var(--surface2);border-radius:20px;padding:2px 8px;color:var(--text-secondary);border:1px solid var(--border)}
+  .tab-row{display:flex;gap:4px}
+  .tab-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font)}
+  .tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .table-filters{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;background:var(--surface2)}
+  .table-filters select,.table-filters input[type="date"]{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--font)}
+  .filter-label{font-size:10px;color:var(--text-secondary);display:flex;flex-direction:column;gap:2px}
+  .filter-label span{font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .btn-clear-dates{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-secondary);cursor:pointer;font-family:var(--font)}
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{font-size:10px;font-weight:600;color:var(--text-secondary);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;cursor:pointer;user-select:none;background:var(--surface2)}
+  th .sa{margin-left:3px;opacity:.35;font-size:9px}
+  td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surface2)}
+  .badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .b-highest{background:#fef2f2;color:#b91c1c}
+  .b-high{background:#fff7ed;color:#c2410c}
+  .b-medium{background:#fffbeb;color:#b45309}
+  .b-low{background:#eff6ff;color:#1d4ed8}
+  .b-open{background:#eff6ff;color:#1d4ed8}
+  .b-wait{background:#f5f3ff;color:#6d28d9}
+  .b-closed{background:#f0fdf4;color:#15803d}
+  .b-breach{background:#fef2f2;color:#b91c1c}
+  .b-ok{background:#f0fdf4;color:#15803d}
+  .b-risk{background:#fffbeb;color:#b45309}
+  .b-nodata{background:var(--surface2);color:var(--text-tertiary)}
+  .sla-wrap{display:flex;align-items:center;gap:6px;min-width:120px}
+  .sla-bg{flex:1;height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}
+  .sla-fill{height:100%;border-radius:2px}
+  .key-link{color:var(--blue);font-weight:600;text-decoration:none;font-size:11px;font-family:var(--font-mono)}
+  .key-link:hover{text-decoration:underline}
+  .footnote{font-size:10px;color:var(--text-tertiary);padding:.75rem 1rem;border-top:1px solid var(--border);line-height:1.6;background:var(--surface2)}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- CONFIG PANEL -->
-<div id="configPanel">
-  <div id="configBox" style="width:min(560px,97vw);max-height:92vh;overflow-y:auto">
-    <h2 style="margin-bottom:.3rem">⚙️ Configuración del tablero</h2>
-
-    <!-- MODE TABS -->
-    <div style="display:flex;gap:0;border:.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.2rem;margin-top:.8rem">
-      <button id="modeTab0" class="mode-tab active" onclick="switchMode(0)">🔌 Proxy CORS<br><small>Recomendado</small></button>
-      <button id="modeTab1" class="mode-tab" onclick="switchMode(1)">📋 Pegar JSON<br><small>Sin instalación</small></button>
-      <button id="modeTab2" class="mode-tab" onclick="switchMode(2)">🏠 Servidor local<br><small>Avanzado</small></button>
-    </div>
-
-    <!-- MODE 0: CORS PROXY -->
-    <div id="modePanel0">
-      <div class="cfg-callout cfg-callout-blue">
-        <strong>Corfix proxy</strong> — Instalá la extensión <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank" style="color:var(--blue)">CORS Unblock</a> en Chrome (gratuita) o usá el proxy público <code>corsproxy.io</code>. Esto permite que el tablero llame a Jira directamente desde el browser.
-      </div>
-      <div class="cfg-field">
-        <label>URL de tu instancia Jira</label>
-        <input id="cfgDomain0" type="text" placeholder="https://waynimovil.atlassian.net" />
-      </div>
-      <div class="cfg-field">
-        <label>Email</label>
-        <input id="cfgEmail0" type="email" placeholder="tu@empresa.com" />
-      </div>
-      <div class="cfg-field">
-        <label>API Token</label>
-        <input id="cfgToken0" type="password" placeholder="Tu Jira API token" />
-        <p class="cfg-note">Generalo en: <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" style="color:var(--blue)">id.atlassian.com → API tokens</a></p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject0" type="text" value="WT" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel0" type="text" value="soporte" /></div>
-      </div>
-      <div class="cfg-field">
-        <label>Proxy</label>
-        <select id="cfgProxy" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface2);color:var(--text)">
-          <option value="none">Sin proxy — extensión CORS Unblock activa</option>
-          <option value="corsproxy">corsproxy.io (público, sin login)</option>
-          <option value="allorigins">allorigins.win (público, sin login)</option>
-        </select>
-        <p class="cfg-note">Si usás extensión CORS Unblock, elegí "Sin proxy". Si no, elegí un proxy público.</p>
-      </div>
-      <div class="cfg-field"><label>Máx. issues</label><input id="cfgMax0" type="number" value="100" min="10" max="200" /></div>
-    </div>
-
-    <!-- MODE 1: PASTE JSON -->
-    <div id="modePanel1" style="display:none">
-      <div class="cfg-callout cfg-callout-amber">
-        <strong>Sin instalación</strong> — Ejecutá este comando en tu terminal y pegá el resultado aquí. Funciona siempre, sin CORS ni extensiones.
-      </div>
-      <div style="background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:.9rem 1rem;font-size:11px;font-family:var(--font-mono);margin-bottom:1rem;line-height:1.7;overflow-x:auto;white-space:pre" id="curlCmd">curl -u "TU_EMAIL:TU_API_TOKEN" \
-  "https://waynimovil.atlassian.net/rest/api/3/search?jql=project%3DWT%20AND%20labels%3Dsoporte%20ORDER%20BY%20created%20DESC&maxResults=100&fields=summary,status,priority,created,updated,assignee,reporter,comment,resolutiondate" \
-  -H "Accept: application/json" > jira_issues.json</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-        <div class="cfg-field"><label>Tu email (para el curl)</label><input id="cfgEmail1" type="email" placeholder="tu@empresa.com" oninput="updateCurl()" /></div>
-        <div class="cfg-field"><label>API Token (para el curl)</label><input id="cfgToken1" type="password" placeholder="token" oninput="updateCurl()" /></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject1" type="text" value="WT" oninput="updateCurl()" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel1" type="text" value="soporte" oninput="updateCurl()" /></div>
-      </div>
-      <div class="cfg-field">
-        <label>Dominio Jira</label>
-        <input id="cfgDomain1" type="text" placeholder="https://waynimovil.atlassian.net" oninput="updateCurl()" />
-      </div>
-      <div class="cfg-field" style="margin-top:.5rem">
-        <label>Pegá el JSON aquí (contenido de jira_issues.json)</label>
-        <textarea id="cfgJsonPaste" rows="6" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-family:var(--font-mono);background:var(--surface2);color:var(--text);resize:vertical" placeholder='{"issues": [...], "total": 50}'></textarea>
-      </div>
-    </div>
-
-    <!-- MODE 2: LOCAL SERVER -->
-    <div id="modePanel2" style="display:none">
-      <div class="cfg-callout cfg-callout-green">
-        <strong>Servidor local con Node.js</strong> — El proxy corre en tu máquina, resuelve CORS y el tablero se actualiza solo. Ideal para uso continuo en la oficina.
-      </div>
-      <div style="background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:.9rem 1rem;font-size:11px;font-family:var(--font-mono);margin-bottom:1rem;line-height:1.8;overflow-x:auto">
-        <span style="color:#6c7086"># 1. Instalá el proxy (una sola vez)</span><br>
-        npm install -g local-cors-proxy<br><br>
-        <span style="color:#6c7086"># 2. Inicialo (dejalo corriendo)</span><br>
-        lcp --proxyUrl https://waynimovil.atlassian.net --port 8010<br><br>
-        <span style="color:#6c7086"># 3. Configurá el tablero con localhost abajo</span>
-      </div>
-      <div class="cfg-field">
-        <label>URL del proxy local</label>
-        <input id="cfgProxyLocal" type="text" value="http://localhost:8010/proxy" />
-        <p class="cfg-note">El proxy redirige al dominio de Jira. Dejá el servidor corriendo mientras usás el tablero.</p>
-      </div>
-      <div class="cfg-field"><label>Email</label><input id="cfgEmail2" type="email" placeholder="tu@empresa.com" /></div>
-      <div class="cfg-field"><label>API Token</label><input id="cfgToken2" type="password" placeholder="Tu Jira API token" /></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject2" type="text" value="WT" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel2" type="text" value="soporte" /></div>
-      </div>
-      <div class="cfg-field"><label>Máx. issues</label><input id="cfgMax2" type="number" value="100" min="10" max="200" /></div>
-    </div>
-
-    <div class="cfg-btns">
-      <button class="btn-primary" onclick="saveConfig()">Guardar y cargar datos</button>
-      <button class="btn-secondary" onclick="closeCfg()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- HEADER -->
 <header>
   <div class="header-left">
     <div class="header-logo">W</div>
     <div>
       <div class="header-title">SLA Dashboard</div>
-      <div class="header-sub" id="headerSub">Wayni Soporte — WT · etiqueta: soporte</div>
+      <div class="header-sub">Wayni Soporte — WT · etiqueta: Soporte</div>
     </div>
   </div>
   <div class="header-right">
     <span class="last-update" id="lastUpdate">—</span>
-    <span class="auto-refresh-label">• auto-refresh 5 min</span>
+    <span class="auto-refresh-label">• auto-refresh 10 min</span>
     <button class="btn-refresh" id="btnRefresh" onclick="loadData()">
       <svg id="refreshIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Actualizar
-    </button>
-    <button class="btn-cfg" onclick="openCfg()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Config
     </button>
   </div>
 </header>
 
 <main>
   <div id="statusBar"></div>
-  <div id="loadingBar"><div class="spinner"></div><span id="loadingMsg">Cargando issues desde Jira...</span></div>
+  <div id="loadingBar"><div class="spinner"></div><span id="loadingMsg">Cargando datos...</span></div>
 
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card"><div class="kpi-label">Total issues</div><div class="kpi-value" style="color:var(--text-secondary)">—</div></div>
@@ -372,30 +146,15 @@
   </div>
 
   <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-card-title">Por estado</div>
-      <div class="legend" id="legStatus"></div>
-      <div style="position:relative;height:130px"><canvas id="chartStatus" role="img" aria-label="Issues por estado"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">SLA atención (1 hora hábil)</div>
-      <div class="legend" id="legAttn"></div>
-      <div style="position:relative;height:130px"><canvas id="chartAttn" role="img" aria-label="SLA atención"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">SLA resolución</div>
-      <div class="legend" id="legRes"></div>
-      <div style="position:relative;height:130px"><canvas id="chartRes" role="img" aria-label="SLA resolución"></canvas></div>
-    </div>
+    <div class="chart-card"><div class="chart-card-title">Por estado</div><div class="legend" id="legStatus"></div><div style="position:relative;height:130px"><canvas id="chartStatus"></canvas></div></div>
+    <div class="chart-card"><div class="chart-card-title">SLA atención (1 hora hábil)</div><div class="legend" id="legAttn"></div><div style="position:relative;height:130px"><canvas id="chartAttn"></canvas></div></div>
+    <div class="chart-card"><div class="chart-card-title">SLA resolución</div><div class="legend" id="legRes"></div><div style="position:relative;height:130px"><canvas id="chartRes"></canvas></div></div>
   </div>
 
-  <!-- ── AVERAGES SECTION ── -->
   <div class="avg-section" id="avgSection" style="display:none">
     <div class="avg-section-header">
-      <div>
-        <div class="avg-section-title">Promedios de SLA por criticidad</div>
-        <div class="avg-section-sub">Tiempo hábil promedio de atención (1.ª respuesta del agente) y resolución (tiempo transcurrido), comparado contra el límite de SLA</div>
-      </div>
+      <div class="avg-section-title">Promedios de SLA por criticidad</div>
+      <div class="avg-section-sub">Tiempo hábil promedio de atención y resolución vs límite de SLA</div>
     </div>
     <div class="avg-grid" id="avgGrid"></div>
     <div class="avg-chart-row">
@@ -409,9 +168,6 @@
       <div class="table-header-left">
         <span class="table-title">Issues</span>
         <span class="count-chip" id="countChip">—</span>
-        <span id="dateRangeBadge" style="font-size:10px;color:var(--text-secondary);display:none">
-          📅 <span id="dateRangeText"></span>
-        </span>
       </div>
       <div class="tab-row">
         <button class="tab-btn active" onclick="setView('all',this)">Todos</button>
@@ -424,9 +180,9 @@
       <select id="fPriority" onchange="renderTable()"><option value="">Todas las prioridades</option><option>Highest</option><option>High</option><option>Medium</option><option>Low</option></select>
       <select id="fStatus" onchange="renderTable()"><option value="">Todos los estados</option></select>
       <select id="fSLA" onchange="renderTable()"><option value="">Ambos SLA</option><option value="attn_breach">Atención vencida</option><option value="res_breach">Resolución incumplida</option><option value="res_risk">Resolución en riesgo</option></select>
-      <label class="filter-label"><span>Desde</span><input type="date" id="fDateFrom" onchange="renderAll()" /></label>
-      <label class="filter-label"><span>Hasta</span><input type="date" id="fDateTo" onchange="renderAll()" /></label>
-      <button class="btn-clear-dates" onclick="clearDates()" title="Limpiar fechas">✕ Fechas</button>
+      <label class="filter-label"><span>Desde</span><input type="date" id="fDateFrom" onchange="renderAll()"/></label>
+      <label class="filter-label"><span>Hasta</span><input type="date" id="fDateTo" onchange="renderAll()"/></label>
+      <button class="btn-clear-dates" onclick="clearDates()">✕ Fechas</button>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -442,741 +198,206 @@
           <th onclick="sortBy('resPct')">SLA resolución<span class="sa">↕</span></th>
           <th>Asignado</th>
         </tr></thead>
-        <tbody id="tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Configurá las credenciales para cargar los datos</td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Cargando...</td></tr></tbody>
       </table>
     </div>
-    <div class="footnote" id="footnote">
+    <div class="footnote">
       Horas hábiles: lun–vie 9–18 hs, excluyendo feriados nacionales Argentina 2026.<br>
-      SLA atención: 1h hábil desde creación hasta primer comentario del agente (no del reporter).<br>
-      SLA resolución — Highest: 4h · High: 5 días hábiles (40h) · Medium: 15 días (120h) · Low: 20 días (160h).
+      SLA atención: 1h hábil. SLA resolución — Highest: 4h · High: 40h · Medium: 120h · Low: 160h.
     </div>
   </div>
 </main>
 
 <script>
-// ════════════════════════════════════════════════
-// CONSTANTES SLA Y CALENDARIO
-// ════════════════════════════════════════════════
-const HOLIDAYS = new Set([
-  '2026-01-01','2026-02-16','2026-02-17',
-  '2026-03-23','2026-03-24',
-  '2026-04-02','2026-04-03',
-  '2026-05-01','2026-05-25',
-  '2026-06-15','2026-06-20',
-  '2026-07-09','2026-07-10',
-  '2026-08-17','2026-10-12',
-  '2026-11-23',
-  '2026-12-07','2026-12-08','2026-12-25'
-]);
-const WORK_START = 9, WORK_END = 18;
-const SLA_RES = { Highest: 4, High: 40, Medium: 120, Low: 160 };
-const SLA_ATTN = 1;
-const PRIO_ORDER = { Highest: 0, High: 1, Medium: 2, Low: 3 };
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6Oa5PV4DlUaS6Gh3i1k4KUqJtgvMUJHI4b0KmQ_36muwnF7TAP35yWVl8wOTv_gs-9Q/exec';
+const JIRA_DOMAIN = 'https://waynimovil.atlassian.net';
+const HOLIDAYS = new Set(['2026-01-01','2026-02-16','2026-02-17','2026-03-23','2026-03-24','2026-04-02','2026-04-03','2026-05-01','2026-05-25','2026-06-15','2026-06-20','2026-07-09','2026-07-10','2026-08-17','2026-10-12','2026-11-23','2026-12-07','2026-12-08','2026-12-25']);
+const WORK_START=9,WORK_END=18;
+const SLA_RES={Highest:4,High:40,Medium:120,Low:160};
+const SLA_ATTN=1;
+const PRIO_ORDER={Highest:0,High:1,Medium:2,Low:3};
 
-function isWorkDay(d) {
-  const wd = d.getDay();
-  if (wd === 0 || wd === 6) return false;
-  const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  return !HOLIDAYS.has(key);
-}
+function isWorkDay(d){const wd=d.getDay();if(wd===0||wd===6)return false;const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return!HOLIDAYS.has(k)}
+function workHoursBetween(from,to){if(!from||!to||to<=from)return 0;let total=0,cur=new Date(from);while(cur<to){if(isWorkDay(cur)){const ds=new Date(cur);ds.setHours(WORK_START,0,0,0);const de=new Date(cur);de.setHours(WORK_END,0,0,0);const s=Math.max(cur.getTime(),ds.getTime());const e=Math.min(to.getTime(),de.getTime());if(e>s)total+=(e-s)/3600000}cur=new Date(cur);cur.setDate(cur.getDate()+1);cur.setHours(WORK_START,0,0,0)}return total}
+function fmtH(h){if(h===null||h===undefined)return'—';if(h<1)return Math.round(h*60)+'min';if(h<24)return h.toFixed(1)+'h';return(h/9).toFixed(1)+'d'}
+function fmtLimit(h){return h<=8?h+'h':(h/9)+'d'}
+function prioClass(p){return{Highest:'b-highest',High:'b-high',Medium:'b-medium',Low:'b-low'}[p]||'b-medium'}
+function statusClass(s){if(/cerrado|done|closed|resolved/i.test(s))return'b-closed';if(/esperando|waiting|pending/i.test(s))return'b-wait';return'b-open'}
+function statusLabel(s){return s==='Esperando la aprobación'?'Esp. aprobación':s}
 
-function workHoursBetween(from, to) {
-  if (!from || !to || to <= from) return 0;
-  let total = 0;
-  let cur = new Date(from);
-  while (cur < to) {
-    if (isWorkDay(cur)) {
-      const ds = new Date(cur); ds.setHours(WORK_START,0,0,0);
-      const de = new Date(cur); de.setHours(WORK_END,0,0,0);
-      const s = Math.max(cur.getTime(), ds.getTime());
-      const e = Math.min(to.getTime(), de.getTime());
-      if (e > s) total += (e - s) / 3600000;
-    }
-    cur = new Date(cur);
-    cur.setDate(cur.getDate() + 1);
-    cur.setHours(WORK_START, 0, 0, 0);
-  }
-  return total;
-}
+let allIssues=[],charts={},currentView='all',sortKey='created',sortDir=-1;
 
-// ════════════════════════════════════════════════
-// CONFIG — MULTI MODE
-// ════════════════════════════════════════════════
-let cfg = {};
-let currentMode = 0; // 0=proxy/ext, 1=paste json, 2=local server
+function setLoading(on,msg){const lb=document.getElementById('loadingBar');lb.style.display=on?'flex':'none';if(msg)document.getElementById('loadingMsg').textContent=msg;document.getElementById('btnRefresh').classList.toggle('loading',on)}
+function showError(msg){const sb=document.getElementById('statusBar');sb.style.display=msg?'block':'none';sb.textContent=msg||''}
 
-function switchMode(m) {
-  currentMode = m;
-  [0,1,2].forEach(i => {
-    document.getElementById('modePanel'+i).style.display = i===m ? '' : 'none';
-    document.getElementById('modeTab'+i).classList.toggle('active', i===m);
-  });
-}
-
-function updateCurl() {
-  const email   = document.getElementById('cfgEmail1').value   || 'TU_EMAIL';
-  const token   = document.getElementById('cfgToken1').value   || 'TU_API_TOKEN';
-  const domain  = document.getElementById('cfgDomain1').value  || 'https://waynimovil.atlassian.net';
-  const proj    = document.getElementById('cfgProject1').value || 'WT';
-  const lbl     = document.getElementById('cfgLabel1').value   || 'soporte';
-  const jql     = encodeURIComponent(`project=${proj} AND labels=${lbl} ORDER BY created DESC`);
-  const fields  = 'summary,status,priority,created,updated,assignee,reporter,comment,resolutiondate';
-  document.getElementById('curlCmd').textContent =
-    `curl -u "${email}:${token}" \\\n  -X POST "${domain}/rest/api/3/search/jql" \\\n  -H "Accept: application/json" -H "Content-Type: application/json" \\\n  --ssl-no-revoke \\\n  -d "{\"jql\":\"project=${proj} AND labels=${lbl} ORDER BY created DESC\",\"maxResults\":100,\"fields\":[\"summary\",\"status\",\"priority\",\"created\",\"updated\",\"assignee\",\"reporter\",\"comment\",\"resolutiondate\"]}" \\\n  -o jira_issues.json`;
-}
-
-function loadConfig() {
-  const saved = localStorage.getItem('wt_sla_cfg');
-  if (saved) cfg = JSON.parse(saved);
-  return !!cfg.mode !== undefined && (cfg.jsonData || cfg.token);
-}
-
-function saveConfig() {
-  const m = currentMode;
-  cfg = { mode: m };
-  if (m === 0) {
-    cfg.domain     = document.getElementById('cfgDomain0').value.trim().replace(/\/$/,'');
-    cfg.email      = document.getElementById('cfgEmail0').value.trim();
-    cfg.token      = document.getElementById('cfgToken0').value.trim();
-    cfg.project    = document.getElementById('cfgProject0').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel0').value.trim() || 'soporte';
-    cfg.proxy      = document.getElementById('cfgProxy').value;
-    cfg.maxResults = parseInt(document.getElementById('cfgMax0').value) || 100;
-    if (!cfg.email || !cfg.token || !cfg.domain) { alert('Completá todos los campos'); return; }
-  } else if (m === 1) {
-    const raw = document.getElementById('cfgJsonPaste').value.trim();
-    if (!raw) { alert('Pegá el JSON del resultado del curl'); return; }
-    try { JSON.parse(raw); } catch(e) { alert('El JSON no es válido: ' + e.message); return; }
-    cfg.jsonData   = raw;
-    cfg.project    = document.getElementById('cfgProject1').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel1').value.trim() || 'soporte';
-    cfg.domain     = document.getElementById('cfgDomain1').value.trim().replace(/\/$/,'') || 'https://waynimovil.atlassian.net';
-  } else {
-    cfg.proxyLocal = document.getElementById('cfgProxyLocal').value.trim();
-    cfg.email      = document.getElementById('cfgEmail2').value.trim();
-    cfg.token      = document.getElementById('cfgToken2').value.trim();
-    cfg.project    = document.getElementById('cfgProject2').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel2').value.trim() || 'soporte';
-    cfg.maxResults = parseInt(document.getElementById('cfgMax2').value) || 100;
-    cfg.domain     = cfg.proxyLocal;
-    if (!cfg.email || !cfg.token || !cfg.proxyLocal) { alert('Completá todos los campos'); return; }
-  }
-  localStorage.setItem('wt_sla_cfg', JSON.stringify(cfg));
-  document.getElementById('headerSub').textContent = (cfg.project||'WT') + ' · etiqueta: ' + (cfg.label||'soporte');
-  closeCfg();
-  loadData();
-}
-
-function openCfg() {
-  const m = cfg.mode || 0;
-  switchMode(m);
-  if (m === 0) {
-    document.getElementById('cfgDomain0').value  = cfg.domain  || '';
-    document.getElementById('cfgEmail0').value   = cfg.email   || '';
-    document.getElementById('cfgToken0').value   = cfg.token   || '';
-    document.getElementById('cfgProject0').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel0').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgProxy').value    = cfg.proxy   || 'none';
-    document.getElementById('cfgMax0').value     = cfg.maxResults || 100;
-  } else if (m === 1) {
-    document.getElementById('cfgProject1').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel1').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgDomain1').value  = cfg.domain  || '';
-    if (cfg.jsonData) document.getElementById('cfgJsonPaste').value = cfg.jsonData;
-  } else {
-    document.getElementById('cfgProxyLocal').value = cfg.proxyLocal || 'http://localhost:8010/proxy';
-    document.getElementById('cfgEmail2').value   = cfg.email   || '';
-    document.getElementById('cfgToken2').value   = cfg.token   || '';
-    document.getElementById('cfgProject2').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel2').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgMax2').value     = cfg.maxResults || 100;
-  }
-  document.getElementById('configPanel').style.display = 'flex';
-}
-
-function closeCfg() {
-  document.getElementById('configPanel').style.display = 'none';
-}
-
-// ════════════════════════════════════════════════
-// FETCH JIRA — MULTI MODE
-// ════════════════════════════════════════════════
-let allIssues = [];
-let charts = {};
-
-function setLoading(on, msg) {
-  const lb = document.getElementById('loadingBar');
-  lb.style.display = on ? 'flex' : 'none';
-  if (msg) document.getElementById('loadingMsg').textContent = msg;
-  const btn = document.getElementById('btnRefresh');
-  btn.classList.toggle('loading', on);
-}
-
-function showError(msg) {
-  const sb = document.getElementById('statusBar');
-  sb.style.display = msg ? 'block' : 'none';
-  sb.textContent = msg || '';
-}
-
-async function jiraGet(path) {
-  const auth = btoa(cfg.email + ':' + cfg.token);
-  let url;
-  if (cfg.mode === 2) {
-    // Local proxy: proxy strips /proxy prefix and forwards to Jira
-    url = cfg.proxyLocal + '/rest/api/3/' + path;
-  } else if (cfg.proxy === 'corsproxy') {
-    url = 'https://corsproxy.io/?' + encodeURIComponent(cfg.domain + '/rest/api/3/' + path);
-  } else if (cfg.proxy === 'allorigins') {
-    url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cfg.domain + '/rest/api/3/' + path);
-  } else {
-    url = cfg.domain + '/rest/api/3/' + path;
-  }
-  const headers = { 'Accept': 'application/json' };
-  // allorigins doesn't forward custom headers — auth goes in URL for that case
-  if (cfg.proxy !== 'allorigins') headers['Authorization'] = 'Basic ' + auth;
-  const res = await fetch(url, { headers });
-  if (!res.ok) {
-    const txt = await res.text().catch(()=>'');
-    throw new Error('Jira API ' + res.status + (txt ? ': ' + txt.slice(0,200) : ''));
-  }
-  return res.json();
-}
-
-async function fetchAllIssues() {
-  // Mode 1: use pasted JSON
-  if (cfg.mode === 1 && cfg.jsonData) {
-    const parsed = JSON.parse(cfg.jsonData);
-    return parsed.issues || parsed.values || [];
-  }
-  const auth = btoa(cfg.email + ':' + cfg.token);
-  const body = JSON.stringify({
-    jql: `project = ${cfg.project} AND labels = ${cfg.label} ORDER BY created DESC`,
-    maxResults: cfg.maxResults || 100,
-    fields: ['summary','status','priority','created','updated','assignee','reporter','comment','resolutiondate']
-  });
-  let url;
-  if (cfg.mode === 2) {
-    url = cfg.proxyLocal + '/rest/api/3/search/jql';
-  } else if (cfg.proxy === 'corsproxy') {
-    url = 'https://corsproxy.io/?' + encodeURIComponent(cfg.domain + '/rest/api/3/search/jql');
-  } else if (cfg.proxy === 'allorigins') {
-    url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cfg.domain + '/rest/api/3/search/jql');
-  } else {
-    url = cfg.domain + '/rest/api/3/search/jql';
-  }
-  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
-  if (cfg.proxy !== 'allorigins') headers['Authorization'] = 'Basic ' + auth;
-  const res = await fetch(url, { method: 'POST', headers, body });
-  if (!res.ok) {
-    const txt = await res.text().catch(()=>'');
-    throw new Error('Jira API ' + res.status + (txt ? ': ' + txt.slice(0,200) : ''));
-  }
-  const data = await res.json();
-  return data.issues || data.values || [];
-}
-
-async function loadData() {
+async function loadData(){
   showError('');
-  setLoading(true, 'Conectando con Jira...');
-  try {
-    setLoading(true, 'Trayendo issues (' + (cfg.maxResults||100) + ' máx.)...');
-    const raw = await fetchAllIssues();
-
-    setLoading(true, 'Calculando horas hábiles y SLAs...');
-    const now = new Date();
-    allIssues = raw.map(i => processIssue(i, now));
-
-    populateStatusFilter();
-    renderKPIs();
-    renderCharts();
-    renderAverages();
-    renderTable();
-
-    document.getElementById('lastUpdate').textContent =
-      'Actualizado: ' + now.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-  } catch(e) {
-    let hint = '';
-    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-      if (cfg.mode === 0 && cfg.proxy === 'none')
-        hint = ' → Instalá la extensión CORS Unblock o elegí un proxy público en Config.';
-      else if (cfg.mode === 0)
-        hint = ' → El proxy público puede estar caído. Probá con otro en Config.';
-      else if (cfg.mode === 2)
-        hint = ' → Verificá que el servidor local esté corriendo (lcp --proxyUrl ...).';
-    }
-    showError('Error: ' + e.message + hint);
-  } finally {
-    setLoading(false);
-  }
+  setLoading(true,'Conectando con Google Sheets...');
+  try{
+    const res=await fetch(SCRIPT_URL+'?t='+Date.now());
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    const rawIssues=data.issues||[];
+    if(!rawIssues.length)throw new Error('Sin issues. Ejecutá syncToSheet primero.');
+    setLoading(true,'Calculando SLAs...');
+    const now=new Date();
+    allIssues=rawIssues.map(i=>{
+      const f=i.fields||{};
+      const created=new Date(f.created||i.created);
+      const reporterId=(f.reporter||{}).accountId||'';
+      const comments=((f.comment||{}).comments)||[];
+      const firstAgentComment=comments.find(c=>c.author?.accountId!==reporterId);
+      const firstAgent=firstAgentComment?new Date(firstAgentComment.created):null;
+      const attnH=firstAgent?workHoursBetween(created,firstAgent):null;
+      const attnBreach=attnH!==null?attnH>SLA_ATTN:false;
+      const priority=(f.priority||{}).name||'Medium';
+      const status=(f.status||{}).name||'';
+      const slaResH=SLA_RES[priority]||120;
+      const workH=workHoursBetween(created,now);
+      const resPct=Math.round((workH/slaResH)*100);
+      const isClosed=/cerrado|done|closed|resolved/i.test(status);
+      const resBreach=!isClosed&&workH>slaResH;
+      const resRisk=!isClosed&&!resBreach&&resPct>=75;
+      const assignee=(f.assignee||{}).displayName||'Sin asignar';
+      return{key:i.key,summary:f.summary||'',status,priority,created,firstAgent,attnH,attnBreach,workH,slaResH,resPct,resBreach,resRisk,isClosed,assignee,issueUrl:JIRA_DOMAIN+'/browse/'+i.key};
+    });
+    populateStatusFilter();renderKPIs();renderCharts();renderAverages();renderTable();
+    let sheetTs='';
+    if(data.updated){const d=new Date(data.updated);if(!isNaN(d))sheetTs=' · Sheet: '+d.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+    document.getElementById('lastUpdate').textContent='Dashboard: '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+sheetTs;
+  }catch(e){showError('Error: '+e.message)}
+  finally{setLoading(false)}
 }
 
-function processIssue(i, now) {
-  const f = i.fields;
-  const created = new Date(f.created);
-  const reporterId = (f.reporter || {}).accountId || '';
+function populateStatusFilter(){
+  const s=[...new Set(allIssues.map(i=>i.status))].sort();
+  document.getElementById('fStatus').innerHTML='<option value="">Todos los estados</option>'+s.map(x=>`<option>${x}</option>`).join('');
+}
+function getDateFilteredIssues(){
+  const fFrom=document.getElementById('fDateFrom').value;
+  const fTo=document.getElementById('fDateTo').value;
+  if(!fFrom&&!fTo)return allIssues;
+  const df=fFrom?new Date(fFrom+'T00:00:00'):null;
+  const dt=fTo?new Date(fTo+'T23:59:59'):null;
+  return allIssues.filter(i=>{if(df&&i.created<df)return false;if(dt&&i.created>dt)return false;return true});
+}
+function renderAll(){renderKPIs();renderCharts();renderAverages();renderTable()}
+function clearDates(){document.getElementById('fDateFrom').value='';document.getElementById('fDateTo').value='';renderAll()}
 
-  const comments = (f.comment || {}).comments || [];
-  const firstAgentComment = comments.find(c => c.author?.accountId !== reporterId);
-  const firstAgent = firstAgentComment ? new Date(firstAgentComment.created) : null;
-
-  const attnH = firstAgent ? workHoursBetween(created, firstAgent) : null;
-  const attnBreach = attnH !== null ? attnH > SLA_ATTN : null;
-
-  const priority = (f.priority || {}).name || 'Medium';
-  const status   = (f.status || {}).name || '';
-  const slaResH  = SLA_RES[priority] || 120;
-  const workH    = workHoursBetween(created, now);
-  const resPct   = Math.round((workH / slaResH) * 100);
-  const isClosed = status === 'Cerrado' || status === 'Done' || status === 'Closed' || status === 'Resolved';
-  const resBreach = !isClosed && workH > slaResH;
-  const resRisk   = !isClosed && !resBreach && resPct >= 75;
-  const assignee  = (f.assignee || {}).displayName || 'Sin asignar';
-
-  return {
-    key: i.key, summary: f.summary || '', status, priority,
-    created, firstAgent, attnH, attnBreach,
-    workH, slaResH, resPct, resBreach, resRisk, isClosed, assignee,
-    issueUrl: cfg.domain + '/browse/' + i.key,
-  };
+function renderKPIs(){
+  const issues=getDateFilteredIssues();
+  const open=issues.filter(i=>!i.isClosed).length,closed=issues.filter(i=>i.isClosed).length;
+  const attnB=issues.filter(i=>i.attnBreach===true).length;
+  const attnBO=issues.filter(i=>!i.isClosed&&i.attnBreach===true).length;
+  const resB=issues.filter(i=>i.resBreach).length,resR=issues.filter(i=>i.resRisk).length;
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Total issues</div><div class="kpi-value" style="color:var(--blue)">${issues.length}</div><div class="kpi-sub">${open} abiertos · ${closed} cerrados</div></div>
+    <div class="kpi-card danger"><div class="kpi-label">SLA atención vencido</div><div class="kpi-value">${attnB}</div><div class="kpi-sub">${attnBO} activos sin atender en &lt;1h</div></div>
+    <div class="kpi-card danger"><div class="kpi-label">SLA resolución incumplido</div><div class="kpi-value">${resB}</div><div class="kpi-sub">issues abiertos fuera de SLA</div></div>
+    <div class="kpi-card warn"><div class="kpi-label">En riesgo resolución</div><div class="kpi-value">${resR}</div><div class="kpi-sub">&gt;75% del tiempo hábil consumido</div></div>`;
 }
 
-// ════════════════════════════════════════════════
-// RENDER KPIs
-// ════════════════════════════════════════════════
-function renderKPIs() {
-  const issues = getDateFilteredIssues();
-  const open   = issues.filter(i => !i.isClosed).length;
-  const closed = issues.filter(i => i.isClosed).length;
-  const attnB  = issues.filter(i => i.attnBreach === true).length;
-  const attnBO = issues.filter(i => !i.isClosed && i.attnBreach === true).length;
-  const resB   = issues.filter(i => i.resBreach).length;
-  const resR   = issues.filter(i => i.resRisk).length;
-  document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-label">Total issues</div>
-      <div class="kpi-value" style="color:var(--blue)">${issues.length}</div>
-      <div class="kpi-sub">${open} abiertos · ${closed} cerrados</div>
-    </div>
-    <div class="kpi-card danger">
-      <div class="kpi-label">SLA atención vencido</div>
-      <div class="kpi-value">${attnB}</div>
-      <div class="kpi-sub">${attnBO} activos sin atender en &lt;1h</div>
-    </div>
-    <div class="kpi-card danger">
-      <div class="kpi-label">SLA resolución incumplido</div>
-      <div class="kpi-value">${resB}</div>
-      <div class="kpi-sub">issues abiertos fuera de SLA</div>
-    </div>
-    <div class="kpi-card warn">
-      <div class="kpi-label">En riesgo resolución</div>
-      <div class="kpi-value">${resR}</div>
-      <div class="kpi-sub">&gt;75% del tiempo hábil consumido</div>
-    </div>`;
-}
-
-// ════════════════════════════════════════════════
-// RENDER CHARTS
-// ════════════════════════════════════════════════
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
-
-function makeDonut(id, labels, data, colors, legId) {
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+function makeDonut(id,labels,data,colors,legId){
   destroyChart(id);
-  document.getElementById(legId).innerHTML = labels.map((l,i) =>
-    `<span class="legend-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l} (${data[i]})</span>`
-  ).join('');
-  charts[id] = new Chart(document.getElementById(id), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-  });
+  document.getElementById(legId).innerHTML=labels.map((l,i)=>`<span class="legend-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l} (${data[i]})</span>`).join('');
+  charts[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+}
+function renderCharts(){
+  const issues=getDateFilteredIssues();
+  const wip=issues.filter(i=>i.status==='Trabajo en curso').length;
+  const wait=issues.filter(i=>i.status==='Esperando la aprobación').length;
+  const closed=issues.filter(i=>i.isClosed).length;
+  const other=issues.length-wip-wait-closed;
+  const sl=['Trabajo en curso','Esp. aprobación','Cerrado'],sd=[wip,wait,closed];
+  if(other>0){sl.push('Otros');sd.push(other)}
+  makeDonut('chartStatus',sl,sd,['#3b82f6','#8b5cf6','#22c55e','#94a3b8'],'legStatus');
+  const aOk=issues.filter(i=>i.attnBreach===false).length,aBr=issues.filter(i=>i.attnBreach===true).length,aNd=issues.filter(i=>i.attnH===null).length;
+  makeDonut('chartAttn',['OK','Vencido','Sin dato'],[aOk,aBr,aNd],['#22c55e','#ef4444','#94a3b8'],'legAttn');
+  const rOk=issues.filter(i=>!i.isClosed&&!i.resBreach&&!i.resRisk).length,rR=issues.filter(i=>i.resRisk).length,rB=issues.filter(i=>i.resBreach).length;
+  makeDonut('chartRes',['OK','En riesgo','Incumplido','Cerrado'],[rOk,rR,rB,closed],['#22c55e','#f59e0b','#ef4444','#94a3b8'],'legRes');
 }
 
-function renderCharts() {
-  const issues = getDateFilteredIssues();
-  const open   = issues.filter(i=>!i.isClosed).length;
-  const wait   = issues.filter(i=>i.status==='Esperando la aprobación').length;
-  const wip    = issues.filter(i=>i.status==='Trabajo en curso').length;
-  const closed = issues.filter(i=>i.isClosed).length;
-  const other  = issues.length - wip - wait - closed;
-
-  const statusLabels = ['Trabajo en curso','Esp. aprobación','Cerrado'];
-  const statusData   = [wip, wait, closed];
-  if (other > 0) { statusLabels.push('Otros'); statusData.push(other); }
-  makeDonut('chartStatus', statusLabels, statusData, ['#3b82f6','#8b5cf6','#22c55e','#94a3b8'], 'legStatus');
-
-  const attnOk = issues.filter(i=>i.attnBreach===false).length;
-  const attnBr = issues.filter(i=>i.attnBreach===true).length;
-  const attnNd = issues.filter(i=>i.attnH===null).length;
-  makeDonut('chartAttn', ['OK','Vencido','Sin dato'], [attnOk, attnBr, attnNd], ['#22c55e','#ef4444','#94a3b8'], 'legAttn');
-
-  const resOk  = issues.filter(i=>!i.isClosed&&!i.resBreach&&!i.resRisk).length;
-  const resR   = issues.filter(i=>i.resRisk).length;
-  const resB   = issues.filter(i=>i.resBreach).length;
-  makeDonut('chartRes', ['OK','En riesgo','Incumplido','Cerrado'], [resOk, resR, resB, closed], ['#22c55e','#f59e0b','#ef4444','#94a3b8'], 'legRes');
-}
-
-// ════════════════════════════════════════════════
-// RENDER AVERAGES
-// ════════════════════════════════════════════════
-function renderAverages() {
-  const issues = getDateFilteredIssues();
-  const PRIO_CFG = [
-    { key: 'Highest', label: 'Highest', cls: 'b-highest', color: '#dc2626', slaAttn: 1, slaRes: 4  },
-    { key: 'High',    label: 'High',    cls: 'b-high',    color: '#ea580c', slaAttn: 1, slaRes: 40 },
-    { key: 'Medium',  label: 'Medium',  cls: 'b-medium',  color: '#d97706', slaAttn: 1, slaRes: 120},
-    { key: 'Low',     label: 'Low',     cls: 'b-low',     color: '#2563eb', slaAttn: 1, slaRes: 160},
-  ];
-
-  // Agrupar
-  const byP = {};
-  PRIO_CFG.forEach(p => { byP[p.key] = { attn: [], res: [], attnBreach: 0, resBreach: 0, total: 0 }; });
-  issues.forEach(i => {
-    if (!byP[i.priority]) return;
-    const g = byP[i.priority];
-    g.total++;
-    if (i.attnH !== null && i.attnH !== undefined) g.attn.push(i.attnH);
-    g.res.push(i.workH);
-    if (i.attnBreach === true) g.attnBreach++;
-    if (i.resBreach) g.resBreach++;
-  });
-
-  const activePrios = PRIO_CFG.filter(p => byP[p.key].total > 0);
-  if (!activePrios.length) return;
-
-  document.getElementById('avgSection').style.display = '';
-
-  function fmtH(h) {
-    if (h === null || h === undefined) return '—';
-    if (h < 1) return Math.round(h * 60) + ' min';
-    if (h < 24) return h.toFixed(1) + 'h';
-    return (h / 9).toFixed(1) + 'd';
-  }
-  function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
-  function pct(val, limit) { return val === null ? 0 : Math.min((val/limit)*100, 100); }
-  function colorFor(val, limit) {
-    const r = val / limit;
-    if (r > 1)    return '#ef4444';
-    if (r >= 0.75) return '#f59e0b';
-    return '#22c55e';
-  }
-
-  // ── Cards
-  document.getElementById('avgGrid').innerHTML = activePrios.map(p => {
-    const g   = byP[p.key];
-    const aA  = avg(g.attn);
-    const aR  = avg(g.res);
-    const attnPct = pct(aA, p.slaAttn);
-    const resPct  = pct(aR, p.slaRes);
-    const attnColor = aA !== null ? colorFor(aA, p.slaAttn) : '#94a3b8';
-    const resColor  = aR !== null ? colorFor(aR, p.slaRes)  : '#94a3b8';
-    const attnCompliance = g.attn.length ? Math.round(((g.attn.length - g.attnBreach) / g.attn.length) * 100) : null;
-    const openIssues = issues.filter(i => i.priority === p.key && !i.isClosed).length;
-
-    return `<div class="avg-card">
-      <div class="avg-card-prio">
-        <span class="avg-prio-badge ${p.cls}">${p.label}</span>
-        <span class="avg-count">${g.total} issues · ${openIssues} abiertos</span>
-      </div>
+function renderAverages(){
+  const issues=getDateFilteredIssues();
+  const PC=[{key:'Highest',cls:'b-highest',slaAttn:1,slaRes:4},{key:'High',cls:'b-high',slaAttn:1,slaRes:40},{key:'Medium',cls:'b-medium',slaAttn:1,slaRes:120},{key:'Low',cls:'b-low',slaAttn:1,slaRes:160}];
+  const byP={};PC.forEach(p=>{byP[p.key]={attn:[],res:[],attnBreach:0,resBreach:0,total:0}});
+  issues.forEach(i=>{if(!byP[i.priority])return;const g=byP[i.priority];g.total++;if(i.attnH!==null)g.attn.push(i.attnH);g.res.push(i.workH);if(i.attnBreach===true)g.attnBreach++;if(i.resBreach)g.resBreach++});
+  const ap=PC.filter(p=>byP[p.key].total>0);if(!ap.length)return;
+  document.getElementById('avgSection').style.display='';
+  const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
+  const pct=(v,l)=>v===null?0:Math.min((v/l)*100,100);
+  const cFor=(v,l)=>{const r=v/l;return r>1?'#ef4444':r>=0.75?'#f59e0b':'#22c55e'};
+  document.getElementById('avgGrid').innerHTML=ap.map(p=>{
+    const g=byP[p.key],aA=avg(g.attn),aR=avg(g.res);
+    const aC=aA!==null?cFor(aA,p.slaAttn):'#94a3b8',rC=aR!==null?cFor(aR,p.slaRes):'#94a3b8';
+    const attnComp=g.attn.length?Math.round(((g.attn.length-g.attnBreach)/g.attn.length)*100):null;
+    const openI=issues.filter(i=>i.priority===p.key&&!i.isClosed).length;
+    return`<div class="avg-card">
+      <div class="avg-card-prio"><span class="avg-prio-badge ${p.cls}">${p.key}</span><span class="avg-count">${g.total} issues · ${openI} abiertos</span></div>
       <div class="avg-metrics">
-        <div class="avg-metric">
-          <div class="avg-metric-label">⚡ Atención promedio</div>
-          <div class="avg-metric-value" style="color:${attnColor}">${aA !== null ? fmtH(aA) : '<span class="avg-no-data">Sin datos</span>'}</div>
-          <div class="avg-metric-limit">Límite SLA: ${fmtH(p.slaAttn)}</div>
-          ${aA !== null ? `<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${attnPct}%;background:${attnColor}"></div></div>` : ''}
-        </div>
-        <div class="avg-metric">
-          <div class="avg-metric-label">🕐 Resolución promedio</div>
-          <div class="avg-metric-value" style="color:${resColor}">${aR !== null ? fmtH(aR) : '<span class="avg-no-data">Sin datos</span>'}</div>
-          <div class="avg-metric-limit">Límite SLA: ${fmtH(p.slaRes)}</div>
-          ${aR !== null ? `<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${resPct}%;background:${resColor}"></div></div>` : ''}
-        </div>
+        <div class="avg-metric"><div class="avg-metric-label">⚡ Atención prom.</div><div class="avg-metric-value" style="color:${aC}">${aA!==null?fmtH(aA):'—'}</div><div class="avg-metric-limit">Límite: ${fmtH(p.slaAttn)}</div>${aA!==null?`<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${pct(aA,p.slaAttn)}%;background:${aC}"></div></div>`:''}</div>
+        <div class="avg-metric"><div class="avg-metric-label">🕐 Resolución prom.</div><div class="avg-metric-value" style="color:${rC}">${aR!==null?fmtH(aR):'—'}</div><div class="avg-metric-limit">Límite: ${fmtH(p.slaRes)}</div>${aR!==null?`<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${pct(aR,p.slaRes)}%;background:${rC}"></div></div>`:''}</div>
       </div>
       <div class="avg-breach-row">
-        ${attnCompliance !== null
-          ? `<span class="avg-breach-chip" style="background:${attnCompliance>=80?'#f0fdf4':'#fef2f2'};color:${attnCompliance>=80?'#15803d':'#b91c1c'}">Atención: ${attnCompliance}% cumplimiento</span>`
-          : ''}
-        ${g.resBreach > 0
-          ? `<span class="avg-breach-chip" style="background:#fef2f2;color:#b91c1c">${g.resBreach} resolución${g.resBreach>1?'es':''} incumplida${g.resBreach>1?'s':''}</span>`
-          : openIssues > 0
-            ? `<span class="avg-breach-chip" style="background:#f0fdf4;color:#15803d">Resolución: 0 incumplimientos</span>`
-            : ''}
+        ${attnComp!==null?`<span class="avg-breach-chip" style="background:${attnComp>=80?'#f0fdf4':'#fef2f2'};color:${attnComp>=80?'#15803d':'#b91c1c'}">Atención: ${attnComp}% cumplimiento</span>`:''}
+        ${g.resBreach>0?`<span class="avg-breach-chip" style="background:#fef2f2;color:#b91c1c">${g.resBreach} resolución${g.resBreach>1?'es':''} incumplida${g.resBreach>1?'s':''}</span>`:openI>0?`<span class="avg-breach-chip" style="background:#f0fdf4;color:#15803d">Resolución: 0 incumplimientos</span>`:''}
       </div>
     </div>`;
   }).join('');
-
-  // ── Bar chart comparativo
-  const maxVal = Math.max(...activePrios.map(p => {
-    const aR = avg(byP[p.key].res);
-    return Math.max(aR || 0, p.slaRes * 0.1);
-  }));
-  const scale = activePrios.reduce((m, p) => Math.max(m, p.slaRes, avg(byP[p.key].res)||0), 0);
-
-  document.getElementById('avgBars').innerHTML = activePrios.map(p => {
-    const g  = byP[p.key];
-    const aA = avg(g.attn);
-    const aR = avg(g.res);
-    const slaLinePct = Math.min((p.slaRes / scale) * 100, 100);
-    const resBarPct  = aR !== null ? Math.min((aR / scale) * 100, 100) : 0;
-    const attnBarPct = aA !== null ? Math.min((aA / p.slaRes) * 100 * (p.slaRes / scale), 100) : 0;
-    const resColor   = aR !== null ? colorFor(aR, p.slaRes) : '#94a3b8';
-
-    return `
-    <div style="margin-bottom:1rem">
+  const scale=ap.reduce((m,p)=>Math.max(m,p.slaRes,avg(byP[p.key].res)||0),0);
+  document.getElementById('avgBars').innerHTML=ap.map(p=>{
+    const g=byP[p.key],aA=avg(g.attn),aR=avg(g.res);
+    const sLP=Math.min((p.slaRes/scale)*100,100),rBP=aR!==null?Math.min((aR/scale)*100,100):0;
+    const aBP=aA!==null?Math.min((aA/p.slaRes)*100*(p.slaRes/scale),100):0;
+    const rC=aR!==null?cFor(aR,p.slaRes):'#94a3b8';
+    return`<div style="margin-bottom:1rem">
       <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:8px">
-        <span class="avg-prio-badge ${p.cls}" style="font-size:10px;padding:1px 8px">${p.label}</span>
+        <span class="avg-prio-badge ${p.cls}" style="font-size:10px;padding:1px 8px">${p.key}</span>
         <span style="font-weight:400;color:var(--text-tertiary)">${g.total} issues</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="avg-bar-group" style="margin-bottom:0">
-          <div class="avg-bar-label">Atención</div>
-          <div class="avg-bar-track" style="height:16px">
-            <div class="avg-bar-fill-h" style="width:${attnBarPct}%;background:#60a5fa;font-size:9px">
-              ${aA !== null && attnBarPct > 8 ? fmtH(aA) : ''}
-            </div>
-            <div class="avg-bar-sla-line" style="left:${Math.min((p.slaAttn/scale)*100,100)}%">
-              <div class="avg-bar-sla-label">SLA ${fmtH(p.slaAttn)}</div>
-            </div>
-          </div>
-          ${aA !== null && attnBarPct <= 8 ? `<span style="font-size:10px;color:var(--text-secondary)">${fmtH(aA)}</span>` : ''}
-        </div>
-        <div class="avg-bar-group" style="margin-bottom:0">
-          <div class="avg-bar-label">Resolución</div>
-          <div class="avg-bar-track" style="height:16px">
-            <div class="avg-bar-fill-h" style="width:${resBarPct}%;background:${resColor};font-size:9px">
-              ${aR !== null && resBarPct > 12 ? fmtH(aR) : ''}
-            </div>
-            <div class="avg-bar-sla-line" style="left:${slaLinePct}%">
-              <div class="avg-bar-sla-label">SLA ${fmtH(p.slaRes)}</div>
-            </div>
-          </div>
-          ${aR !== null && resBarPct <= 12 ? `<span style="font-size:10px;color:var(--text-secondary)">${fmtH(aR)}</span>` : ''}
-        </div>
+        <div class="avg-bar-group" style="margin-bottom:0"><div class="avg-bar-label">Atención</div><div class="avg-bar-track" style="height:16px"><div class="avg-bar-fill-h" style="width:${aBP}%;background:#60a5fa;font-size:9px">${aA!==null&&aBP>8?fmtH(aA):''}</div><div class="avg-bar-sla-line" style="left:${Math.min((p.slaAttn/scale)*100,100)}%"><div class="avg-bar-sla-label">SLA ${fmtH(p.slaAttn)}</div></div></div></div>
+        <div class="avg-bar-group" style="margin-bottom:0"><div class="avg-bar-label">Resolución</div><div class="avg-bar-track" style="height:16px"><div class="avg-bar-fill-h" style="width:${rBP}%;background:${rC};font-size:9px">${aR!==null&&rBP>12?fmtH(aR):''}</div><div class="avg-bar-sla-line" style="left:${sLP}%"><div class="avg-bar-sla-label">SLA ${fmtH(p.slaRes)}</div></div></div></div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════
-// RENDER TABLE
-// ════════════════════════════════════════════════
-let currentView = 'all';
-let sortKey = 'created';
-let sortDir = -1;
+function setView(v,el){currentView=v;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderTable()}
+function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=k==='created'?-1:1}renderTable()}
 
-function setView(v, el) {
-  currentView = v;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderTable();
-}
-
-function sortBy(k) {
-  if (sortKey === k) sortDir *= -1;
-  else { sortKey = k; sortDir = k === 'created' ? -1 : 1; }
-  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-  renderTable();
-}
-
-function fmtH(h) {
-  if (h === null || h === undefined) return '—';
-  if (h < 1) return Math.round(h * 60) + 'min';
-  if (h < 24) return h.toFixed(1) + 'h';
-  return (h / 9).toFixed(1) + 'd';
-}
-function fmtLimit(h) { return h <= 8 ? h + 'h' : (h / 9) + 'd'; }
-function prioClass(p) { return { Highest:'b-highest', High:'b-high', Medium:'b-medium', Low:'b-low' }[p] || 'b-medium'; }
-function statusClass(s) {
-  if (/cerrado|done|closed|resolved/i.test(s)) return 'b-closed';
-  if (/esperando|waiting|pending/i.test(s)) return 'b-wait';
-  return 'b-open';
-}
-function statusLabel(s) { return s === 'Esperando la aprobación' ? 'Esp. aprobación' : s; }
-
-function populateStatusFilter() {
-  const statuses = [...new Set(allIssues.map(i => i.status))].sort(); // always show all statuses
-  const sel = document.getElementById('fStatus');
-  sel.innerHTML = '<option value="">Todos los estados</option>' +
-    statuses.map(s => `<option>${s}</option>`).join('');
-}
-
-// ── Returns allIssues filtered by the date range pickers ──────────────────────
-function getDateFilteredIssues() {
-  const fFrom = document.getElementById('fDateFrom').value;
-  const fTo   = document.getElementById('fDateTo').value;
-  if (!fFrom && !fTo) return allIssues;
-  const dateFrom = fFrom ? new Date(fFrom + 'T00:00:00') : null;
-  const dateTo   = fTo   ? new Date(fTo   + 'T23:59:59') : null;
-  return allIssues.filter(i => {
-    if (dateFrom && i.created < dateFrom) return false;
-    if (dateTo   && i.created > dateTo)   return false;
+function renderTable(){
+  if(!allIssues.length)return;
+  const fP=document.getElementById('fPriority').value,fS=document.getElementById('fStatus').value,fSL=document.getElementById('fSLA').value;
+  let filtered=getDateFilteredIssues().filter(i=>{
+    if(fP&&i.priority!==fP)return false;
+    if(fS&&i.status!==fS)return false;
+    if(currentView==='open'&&i.isClosed)return false;
+    if(currentView==='breach'&&!i.resBreach&&!i.attnBreach)return false;
+    if(currentView==='risk'&&!i.resRisk)return false;
+    if(fSL==='attn_breach'&&i.attnBreach!==true)return false;
+    if(fSL==='res_breach'&&!i.resBreach)return false;
+    if(fSL==='res_risk'&&!i.resRisk)return false;
     return true;
   });
-}
-
-// ── Re-renders everything (KPIs, charts, averages, table) with date filter ────
-function renderAll() {
-  renderKPIs();
-  renderCharts();
-  renderAverages();
-  renderTable();
-}
-
-function clearDates() {
-  document.getElementById('fDateFrom').value = '';
-  document.getElementById('fDateTo').value = '';
-  renderAll();
-}
-
-function renderTable() {
-  if (!allIssues.length) return;
-  const fP  = document.getElementById('fPriority').value;
-  const fS  = document.getElementById('fStatus').value;
-  const fSL = document.getElementById('fSLA').value;
-
-  let filtered = getDateFilteredIssues().filter(i => {
-    if (fP && i.priority !== fP) return false;
-    if (fS && i.status !== fS) return false;
-    if (currentView === 'open'   && i.isClosed) return false;
-    if (currentView === 'breach' && !i.resBreach && !i.attnBreach) return false;
-    if (currentView === 'risk'   && !i.resRisk) return false;
-    if (fSL === 'attn_breach' && i.attnBreach !== true) return false;
-    if (fSL === 'res_breach'  && !i.resBreach) return false;
-    if (fSL === 'res_risk'    && !i.resRisk) return false;
-    return true;
-  });
-
-  filtered.sort((a, b) => {
-    let av = a[sortKey], bv = b[sortKey];
-    if (sortKey === 'priority') { av = PRIO_ORDER[a.priority]||99; bv = PRIO_ORDER[b.priority]||99; }
-    if (sortKey === 'key') { av = parseInt(a.key.split('-')[1]); bv = parseInt(b.key.split('-')[1]); }
-    if (av < bv) return -sortDir;
-    if (av > bv) return sortDir;
-    return 0;
-  });
-
-  document.getElementById('countChip').textContent = filtered.length + ' de ' + getDateFilteredIssues().length + ' (' + allIssues.length + ' total)';
-  const fFrom2 = document.getElementById('fDateFrom').value;
-  const fTo2   = document.getElementById('fDateTo').value;
-  const badge  = document.getElementById('dateRangeBadge');
-  const badgeTxt = document.getElementById('dateRangeText');
-  if (fFrom2 || fTo2) {
-    badge.style.display = '';
-    badgeTxt.textContent = (fFrom2 || '…') + ' → ' + (fTo2 || 'hoy');
-  } else {
-    badge.style.display = 'none';
-  }
-
-  document.getElementById('tbody').innerHTML = filtered.length
-    ? filtered.map(i => {
-        const rPct   = Math.min(i.resPct, 100);
-        const barC   = i.resBreach ? '#ef4444' : i.resRisk ? '#f59e0b' : '#22c55e';
-        const createdStr = i.created.toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit'})
-          + ' ' + i.created.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-
-        const attnBadge = i.attnH === null
-          ? `<span class="badge b-nodata">Sin dato</span>`
-          : i.attnBreach
-            ? `<span class="badge b-breach">${fmtH(i.attnH)} Vencido</span>`
-            : `<span class="badge b-ok">${fmtH(i.attnH)} OK</span>`;
-
-        const resBadge = i.isClosed
-          ? `<span class="badge b-closed">Cerrado</span>`
-          : i.resBreach
-            ? `<span class="badge b-breach">Incumplido</span>`
-            : i.resRisk
-              ? `<span class="badge b-risk">En riesgo</span>`
-              : `<span class="badge b-ok">OK</span>`;
-
-        return `<tr>
-          <td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td>
-          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td>
-          <td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td>
-          <td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td>
-          <td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${createdStr}</td>
-          <td>${attnBadge}</td>
-          <td style="color:var(--text-secondary)">${fmtH(i.workH)}</td>
-          <td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td>
-          <td>
-            <div class="sla-wrap">
-              <div class="sla-bg"><div class="sla-fill" style="width:${rPct}%;background:${barC}"></div></div>
-              ${resBadge}
-            </div>
-          </td>
-          <td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.assignee}</td>
-        </tr>`;
+  filtered.sort((a,b)=>{let av=a[sortKey],bv=b[sortKey];if(sortKey==='priority'){av=PRIO_ORDER[a.priority]||99;bv=PRIO_ORDER[b.priority]||99}if(sortKey==='key'){av=parseInt(a.key.split('-')[1]);bv=parseInt(b.key.split('-')[1])}return av<bv?-sortDir:av>bv?sortDir:0});
+  document.getElementById('countChip').textContent=filtered.length+' de '+getDateFilteredIssues().length+' ('+allIssues.length+' total)';
+  document.getElementById('tbody').innerHTML=filtered.length
+    ?filtered.map(i=>{
+        const rP=Math.min(i.resPct,100),bC=i.resBreach?'#ef4444':i.resRisk?'#f59e0b':'#22c55e';
+        const cs=i.created.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+i.created.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        const aB=i.attnH===null?`<span class="badge b-nodata">Sin dato</span>`:i.attnBreach?`<span class="badge b-breach">${fmtH(i.attnH)} Vencido</span>`:`<span class="badge b-ok">${fmtH(i.attnH)} OK</span>`;
+        const rB=i.isClosed?`<span class="badge b-closed">Cerrado</span>`:i.resBreach?`<span class="badge b-breach">Incumplido</span>`:i.resRisk?`<span class="badge b-risk">En riesgo</span>`:`<span class="badge b-ok">OK</span>`;
+        return`<tr><td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td><td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td><td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td><td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${cs}</td><td>${aB}</td><td style="color:var(--text-secondary)">${fmtH(i.workH)}</td><td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td><td><div class="sla-wrap"><div class="sla-bg"><div class="sla-fill" style="width:${rP}%;background:${bC}"></div></div>${rB}</div></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.assignee}</td></tr>`;
       }).join('')
-    : `<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>`;
+    :`<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>`;
 }
 
-// ════════════════════════════════════════════════
-// AUTO-REFRESH CADA 5 MINUTOS
-// ════════════════════════════════════════════════
-function startAutoRefresh() {
-  setInterval(() => { if (cfg.domain && cfg.token) loadData(); }, 5 * 60 * 1000);
-}
-
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
-
-// ════════════════════════════════════════════════
-// DATOS PRECARGADOS — generados automáticamente
-// Actualización: 04/06/2026 15:18 hs
-// 100 issues, proyecto WT, etiqueta soporte
-// SLAs: Highest 4h · High 40h · Medium 120h · Low 160h
-// Horas hábiles lun–vie 9–18 hs, feriados Argentina 2026
-// ════════════════════════════════════════════════
-const PRELOADED = [{"key":"WT-7555","summary":"QR aprobado en Voii y Pomelo, Pending en Core","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-04T11:14:58.166-0300","isClosed":false,"workH":1.05,"attnH":0.25,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":0.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7555"},{"key":"WT-7554","summary":"CASH OUT no se encuentra en Pomelo, aprobado en Voii","status":"Trabajo en curso","priority":"Highest","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-04T11:02:19.407-0300","isClosed":false,"workH":1.26,"attnH":0.17,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":31.4,"slaResH":4,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7554"},{"key":"WT-7552","summary":"DNI aptos para refinanciar, no les esta permitiendo avanzar en autogestion","status":"Esperando la aprobación","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-03T16:00:04.082-0300","isClosed":false,"workH":5.29,"attnH":0.68,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":13.2,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7552"},{"key":"WT-7551","summary":"Legajos BO no coinciden la fecha de nacimiento con la del DNI","status":"Esperando la aprobación","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-03T15:19:46.119-0300","isClosed":false,"workH":5.97,"attnH":1.34,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":14.9,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7551"},{"key":"WT-7550","summary":"Inconsistencia Comisión QR","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-06-03T11:20:28.254-0300","isClosed":false,"workH":9.95,"attnH":0.0,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":8.3,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7550"},{"key":"WT-7549","summary":"CASH OUT no se encuentra en Pomelo, aprobado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-03T11:06:14.832-0300","isClosed":true,"workH":10.19,"attnH":0.59,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":25.5,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7549"},{"key":"WT-7548","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-02T17:51:51.463-0300","isClosed":false,"workH":12.43,"attnH":0.41,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":10.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7548"},{"key":"WT-7547","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-02T17:42:15.606-0300","isClosed":false,"workH":12.59,"attnH":0.56,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":31.5,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7547"},{"key":"WT-7546","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-02T17:38:39.488-0300","isClosed":false,"workH":12.65,"attnH":0.62,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":10.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7546"},{"key":"WT-7544","summary":"ADELANTO preaprobado","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-02T10:16:15.092-0300","isClosed":false,"workH":20.02,"attnH":0.95,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":16.7,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7544"},{"key":"WT-7543","summary":"ADELANTO preaprobado","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-02T09:20:42.024-0300","isClosed":false,"workH":20.95,"attnH":0.03,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":17.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7543"},{"key":"WT-7542","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-01T17:14:02.318-0300","isClosed":false,"workH":22.06,"attnH":0.07,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":55.2,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7542"},{"key":"WT-7541","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-01T17:01:35.648-0300","isClosed":false,"workH":22.27,"attnH":0.13,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":18.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7541"},{"key":"WT-7540","summary":"Pedido Depósito Ganador Sorteo El Impulso de Emprender","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-06-01T15:54:43.911-0300","isClosed":false,"workH":23.38,"attnH":0.08,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":58.5,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7540"},{"key":"WT-7539","summary":"Cambio de estado del préstamo #304530 de finalizado a Vendido ","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-06-01T14:26:31.359-0300","isClosed":true,"workH":24.85,"attnH":0.03,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":20.7,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7539"},{"key":"WT-7538","summary":"Incorporar atributo días de deuda en Moengage para automatizacion de campañas ","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-06-01T14:19:04.750-0300","isClosed":false,"workH":24.98,"attnH":0.14,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":20.8,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7538"},{"key":"WT-7537","summary":"Error en Onboarding: validación incorrecta de TDD registrada","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-06-01T14:17:51.123-0300","isClosed":false,"workH":25.0,"attnH":0.05,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":62.5,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7537"},{"key":"WT-7536","summary":"Adelanto Pre-Aprobado sin acreditar en la billetera.","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-01T11:58:50.610-0300","isClosed":false,"workH":27.31,"attnH":0.03,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":22.8,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7536"},{"key":"WT-7534","summary":"No puedo marcar cartera en el BO","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-06-01T09:51:46.385-0300","isClosed":true,"workH":29.43,"attnH":0.25,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":73.6,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7534"},{"key":"WT-7533","summary":"Refinanciacion ","status":"Cancelado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T18:29:06.454-0300","isClosed":false,"workH":30.3,"attnH":1.11,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":true,"resPct":75.7,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7533"},{"key":"WT-7532","summary":"Recompra de deuda - Cambiar estado de prestamo en BO","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T17:58:48.670-0300","isClosed":true,"workH":30.32,"attnH":1.12,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":25.3,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7532"},{"key":"WT-7531","summary":"Problema transferencia","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T17:50:12.886-0300","isClosed":false,"workH":30.46,"attnH":1.26,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":25.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7531"},{"key":"WT-7530","summary":"Incorporar atributo Monto total adeudado en Moengage para automatizacion de campañas ","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-29T17:46:04.075-0300","isClosed":false,"workH":30.53,"attnH":1.33,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":25.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7530"},{"key":"WT-7529","summary":"No se actualiza la linea de crédito con el importe correcto para la generación de refinanciaciones manuales ","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-29T17:41:17.222-0300","isClosed":true,"workH":30.61,"attnH":0.08,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":76.5,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7529"},{"key":"WT-7528","summary":"Actualización del parquet BCRA 202604 para leads","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-29T16:44:17.553-0300","isClosed":true,"workH":31.56,"attnH":0.93,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":78.9,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7528"},{"key":"WT-7527","summary":"Alta Agustin Catalin","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-29T16:27:45.490-0300","isClosed":true,"workH":31.83,"attnH":0.09,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":26.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7527"},{"key":"WT-7526","summary":"Alta Mateo Monsegur","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-29T16:23:17.395-0300","isClosed":true,"workH":31.91,"attnH":0.16,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":26.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7526"},{"key":"WT-7523","summary":"Adelanto y Tasa 0 que no llegaron al Pending de Auditoria ","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T14:34:45.178-0300","isClosed":false,"workH":33.72,"attnH":0.16,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":28.1,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7523"},{"key":"WT-7521","summary":"Recompra de deuda - Cambiar estado de prestamo en BO","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T12:26:42.161-0300","isClosed":true,"workH":35.85,"attnH":1.46,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":29.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7521"},{"key":"WT-7520","summary":"Adelanto Pre-Aprobado sin acreditar en la billetera.","status":"Trabajo en curso","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T12:24:32.204-0300","isClosed":false,"workH":35.89,"attnH":1.5,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":29.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7520"},{"key":"WT-7518","summary":"Recompra de deuda - Cambiar estado de prestamo en BO","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T09:44:47.105-0300","isClosed":false,"workH":38.55,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":32.1,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7518"},{"key":"WT-7517","summary":"Recompra de deuda - Cambiar estado de prestamo en BO","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T09:37:40.280-0300","isClosed":false,"workH":38.67,"attnH":0.16,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":32.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7517"},{"key":"WT-7516","summary":"Alta empleado - 08/06/2026 - Ramiro Martinez","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-29T09:36:08.066-0300","isClosed":true,"workH":38.69,"attnH":0.0,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":32.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7516"},{"key":"WT-7515","summary":"Cancelar refinanciación se generada en 12 cuotas y era 6","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-29T09:25:57.369-0300","isClosed":true,"workH":38.86,"attnH":0.02,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":32.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7515"},{"key":"WT-7514","summary":"Adelanto Pre-Aprobado sin acreditar en la billetera.","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T13:08:24.983-0300","isClosed":true,"workH":44.16,"attnH":1.05,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":36.8,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7514"},{"key":"WT-7513","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T12:46:05.824-0300","isClosed":true,"workH":44.53,"attnH":0.22,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":37.1,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7513"},{"key":"WT-7512","summary":"Auditoria: validar mayores de 70","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-28T12:33:47.077-0300","isClosed":false,"workH":44.73,"attnH":3.52,"attnBreach":true,"attnRisk":false,"resBreach":true,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7512"},{"key":"WT-7511","summary":"Error en el Onboarding - cliente no puede registrar TDD","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-28T11:07:49.053-0300","isClosed":true,"workH":46.17,"attnH":0.34,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7511"},{"key":"WT-7510","summary":"Crear usuarios para proveedores Calls en Cuponera","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T09:52:42.849-0300","isClosed":false,"workH":47.42,"attnH":1.07,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":39.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7510"},{"key":"WT-7509","summary":"Crear usuario para proveedor 5 Online en Cuponera","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T09:49:22.608-0300","isClosed":false,"workH":47.47,"attnH":1.14,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":39.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7509"},{"key":"WT-7508","summary":"Crear usuario para Porveedor Palmero en Cuponera","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T09:46:49.171-0300","isClosed":true,"workH":47.52,"attnH":16.21,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":39.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7508"},{"key":"WT-7507","summary":"ADELANTO preaprobado","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-28T08:57:10.184-0300","isClosed":true,"workH":48.3,"attnH":0.24,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":40.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7507"},{"key":"WT-7506","summary":"Usuarios con Error de los ultimos días - NO REACHABLE POR MOENGAGE","status":"Trabajo en curso","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-27T17:21:08.326-0300","isClosed":false,"workH":48.94,"attnH":7.11,"attnBreach":true,"attnRisk":false,"resBreach":true,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7506"},{"key":"WT-7504","summary":"Revisar query para seguimiento de altas de billetera ","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-27T12:40:06.286-0300","isClosed":true,"workH":53.63,"attnH":0.2,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":44.7,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7504"},{"key":"WT-7503","summary":"CASH IN no acreditado en Pomelo, Pending en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T16:52:42.556-0300","isClosed":true,"workH":58.42,"attnH":0.11,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7503"},{"key":"WT-7502","summary":"Transacciones faltantes en base VOII","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T15:06:05.671-0300","isClosed":true,"workH":60.19,"attnH":0.24,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7502"},{"key":"WT-7501","summary":"Acceso al BO","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-26T14:58:22.739-0300","isClosed":true,"workH":60.32,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7501"},{"key":"WT-7500","summary":"Generación de legajo","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T11:42:50.245-0300","isClosed":true,"workH":63.58,"attnH":0.12,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":53.0,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7500"},{"key":"WT-7497","summary":"Reintegro supermercado QR","status":"Esperando la aprobación","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-26T10:59:39.483-0300","isClosed":false,"workH":64.3,"attnH":0.06,"attnBreach":false,"attnRisk":false,"resBreach":true,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7497"},{"key":"WT-7496","summary":"QR aprobado en Pomelo, Pending en Core, no encontrado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T10:51:16.472-0300","isClosed":true,"workH":64.44,"attnH":0.06,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7496"},{"key":"WT-7495","summary":"QR aprobado en Pomelo, Pending en Core, no encontrado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T10:50:50.214-0300","isClosed":true,"workH":64.45,"attnH":0.01,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7495"},{"key":"WT-7494","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T10:46:35.079-0300","isClosed":true,"workH":64.52,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7494"},{"key":"WT-7493","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T10:46:32.473-0300","isClosed":true,"workH":64.52,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7493"},{"key":"WT-7492","summary":"Legajos BO no coinciden la fecha de nacimiento con la del DNI","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T10:33:02.572-0300","isClosed":true,"workH":64.74,"attnH":0.06,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":54.0,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7492"},{"key":"WT-7491","summary":"ADELANTO preaprobado","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-26T09:25:31.060-0300","isClosed":true,"workH":65.87,"attnH":0.06,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":54.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7491"},{"key":"WT-7490","summary":"Cliente sin pre registro de Billetera","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-22T16:47:12.410-0300","isClosed":true,"workH":67.51,"attnH":0.09,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":56.3,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7490"},{"key":"WT-7489","summary":"Pedido Cashback Nafta 29 y 30 mayo","status":"Cancelado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-22T15:22:41.256-0300","isClosed":false,"workH":68.92,"attnH":0.2,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":57.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7489"},{"key":"WT-7488","summary":"No puede transferir ","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-22T14:42:54.994-0300","isClosed":true,"workH":69.58,"attnH":0.23,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":58.0,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7488"},{"key":"WT-7487","summary":"CASH IN no acreditado en Pomelo, Pending en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-22T13:13:34.375-0300","isClosed":true,"workH":71.07,"attnH":0.92,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7487"},{"key":"WT-7486","summary":"Domicilio de la app no coincide con domicilio de sistema","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T17:55:16.109-0300","isClosed":true,"workH":75.37,"attnH":0.55,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":62.8,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7486"},{"key":"WT-7485","summary":"Generación de legajo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T14:34:55.990-0300","isClosed":true,"workH":78.71,"attnH":0.08,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7485"},{"key":"WT-7484","summary":"Legajos BO no coinciden la fecha de nacimiento con la del DNI","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T14:26:18.910-0300","isClosed":true,"workH":78.86,"attnH":0.22,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7484"},{"key":"WT-7483","summary":"PIX reversado, con estado Done en Kamipay","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T12:39:46.499-0300","isClosed":false,"workH":80.63,"attnH":0.11,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":67.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7483"},{"key":"WT-7482","summary":"PIX reversado, con estado Done en Kamipay","status":"Esperando la aprobación","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T12:38:10.790-0300","isClosed":false,"workH":80.66,"attnH":0.13,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":67.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7482"},{"key":"WT-7481","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T11:47:47.637-0300","isClosed":true,"workH":81.5,"attnH":0.51,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7481"},{"key":"WT-7480","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T11:47:19.419-0300","isClosed":true,"workH":81.51,"attnH":0.52,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7480"},{"key":"WT-7479","summary":"Adelanto Pre-Aprobado sin acreditar en la billetera.","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-21T11:01:33.135-0300","isClosed":true,"workH":82.27,"attnH":1.28,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":68.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7479"},{"key":"WT-7478","summary":"No puede activar la tarjeta fisica","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T16:25:13.569-0300","isClosed":true,"workH":85.88,"attnH":1.58,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":71.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7478"},{"key":"WT-7477","summary":"Generación de Alerta - Clientes con saldo negativo en la billetera","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T15:45:54.965-0300","isClosed":true,"workH":86.53,"attnH":0.02,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":72.1,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7477"},{"key":"WT-7476","summary":"reestablecer el extra score a 0 ","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T12:48:40.464-0300","isClosed":true,"workH":89.48,"attnH":0.06,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":74.6,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7476"},{"key":"WT-7475","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T11:06:20.149-0300","isClosed":true,"workH":91.19,"attnH":0.07,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7475"},{"key":"WT-7474","summary":"CASH IN no acreditado en Pomelo, Pending en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T10:48:15.334-0300","isClosed":true,"workH":91.49,"attnH":0.17,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7474"},{"key":"WT-7473","summary":"CASH IN no acreditado en Pomelo, Pending en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T10:48:05.027-0300","isClosed":true,"workH":91.49,"attnH":0.18,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7473"},{"key":"WT-7472","summary":"CASH IN no acreditado en Pomelo, Pending en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-20T10:47:48.097-0300","isClosed":true,"workH":91.5,"attnH":0.16,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7472"},{"key":"WT-7471","summary":"Problemas para debitar Decidir membresias","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-19T17:04:24.088-0300","isClosed":true,"workH":94.22,"attnH":0.03,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7471"},{"key":"WT-7470","summary":"Cliente sin pre registro de Billetera","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-19T16:30:10.219-0300","isClosed":true,"workH":94.79,"attnH":0.43,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":79.0,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7470"},{"key":"WT-7469","summary":"Solicitud de dirección IP de cliente 31024575 KARINA VANESA SCAGLIONE","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-19T11:15:19.339-0300","isClosed":true,"workH":100.04,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7469"},{"key":"WT-7468","summary":"Acceso a modificación de Extra score en BO ","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-19T10:35:23.092-0300","isClosed":true,"workH":100.71,"attnH":0.13,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":83.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7468"},{"key":"WT-7467","summary":" Generación cuotas Junio 2026-membresía","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-19T09:41:14.576-0300","isClosed":true,"workH":101.61,"attnH":0.07,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7467"},{"key":"WT-7466","summary":"Accesos Wendy Morel","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-18T17:40:03.596-0300","isClosed":true,"workH":102.63,"attnH":0.15,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":85.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7466"},{"key":"WT-7464","summary":"Adelanto Pre-Aprobado sin acreditar en la billetera.","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T16:48:48.825-0300","isClosed":true,"workH":103.48,"attnH":0.3,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":86.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7464"},{"key":"WT-7463","summary":"Solicitud de actualización de motivo de rechazo en BO","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-18T16:40:18.401-0300","isClosed":true,"workH":103.62,"attnH":0.1,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":86.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7463"},{"key":"WT-7460","summary":"No podemos modificar monto en BO","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-18T15:45:35.995-0300","isClosed":true,"workH":104.54,"attnH":0.02,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7460"},{"key":"WT-7459","summary":"Cliente con reverso de préstamo no puede transferir","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T12:19:01.361-0300","isClosed":true,"workH":107.98,"attnH":0.2,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7459"},{"key":"WT-7457","summary":"QR aprobado en Pomelo, Pending en Core, no encontrado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:59:55.157-0300","isClosed":true,"workH":108.3,"attnH":0.23,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7457"},{"key":"WT-7456","summary":"QR aprobado en Pomelo, Pending en Core, no encontrado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:58:15.588-0300","isClosed":true,"workH":108.32,"attnH":0.26,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7456"},{"key":"WT-7455","summary":"QR aprobado en Pomelo, Pending en Core, no encontrado en Voii","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:56:07.214-0300","isClosed":true,"workH":108.36,"attnH":0.29,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7455"},{"key":"WT-7454","summary":"QR aprobado en Voii y Pomelo, Pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:46:30.135-0300","isClosed":true,"workH":108.52,"attnH":0.09,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7454"},{"key":"WT-7453","summary":"QR aprobado en Voii y Pomelo, Pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:45:53.461-0300","isClosed":true,"workH":108.53,"attnH":0.1,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.4,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7453"},{"key":"WT-7452","summary":"QR aprobado en Voii y Pomelo, Pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:45:16.094-0300","isClosed":true,"workH":108.54,"attnH":0.04,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.5,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7452"},{"key":"WT-7451","summary":"QR aprobado en Pomelo, fallido en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:35:09.562-0300","isClosed":true,"workH":108.71,"attnH":0.02,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7451"},{"key":"WT-7450","summary":"QR aprobado en Pomelo, fallido en Core","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:34:39.123-0300","isClosed":true,"workH":108.72,"attnH":0.03,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7450"},{"key":"WT-7449","summary":"Prestamo vendido","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:29:19.373-0300","isClosed":true,"workH":108.81,"attnH":0.05,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.7,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7449"},{"key":"WT-7448","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:14:17.956-0300","isClosed":true,"workH":109.06,"attnH":0.09,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7448"},{"key":"WT-7447","summary":"CASH OUT aprobado en Pomelo y Voii, pending en Core","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T11:13:55.397-0300","isClosed":true,"workH":109.06,"attnH":0.08,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":90.9,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7447"},{"key":"WT-7446","summary":"ADELANTO preaprobado","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-18T09:40:34.818-0300","isClosed":true,"workH":110.62,"attnH":0.46,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":92.2,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7446"},{"key":"WT-7444","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-15T14:48:19.745-0300","isClosed":true,"workH":114.49,"attnH":3.19,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7444"},{"key":"WT-7443","summary":"QR vencido en Voii, Pending en Core, aprobado en Pomelo","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Incidente","created":"2026-05-15T14:48:13.957-0300","isClosed":true,"workH":114.49,"attnH":3.2,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7443"},{"key":"WT-7442","summary":"Reducción de volumen PDF","status":"Cerrado","priority":"High","assignee":"Carolina Medina","issuetype":"Solicitud de servicio","created":"2026-05-15T12:36:21.747-0300","isClosed":true,"workH":116.69,"attnH":null,"attnBreach":false,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":40,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7442"},{"key":"WT-7441","summary":"No levanto la marca de la regla Pagos voluntarios con TDD sin coincidencia de D.N.I.","status":"Cerrado","priority":"Medium","assignee":"Carolina Medina","issuetype":"Cambiar","created":"2026-05-14T17:42:54.216-0300","isClosed":true,"workH":120.58,"attnH":3.09,"attnBreach":true,"attnRisk":false,"resBreach":false,"resRisk":false,"resPct":100,"slaResH":120,"slaAttnH":1,"issueUrl":"https://waynimovil.atlassian.net/browse/WT-7441"}];
-
-// Override loadData() para usar datos precargados
-async function loadData() {
-  showError('');
-  setLoading(true, 'Cargando datos...');
-  try {
-    const now = new Date();
-    // Los datos ya tienen SLAs calculados; los adaptamos al formato que espera renderKPIs/renderTable
-    allIssues = PRELOADED.map(d => ({
-      key:        d.key,
-      summary:    d.summary,
-      status:     d.status,
-      priority:   d.priority,
-      assignee:   d.assignee,
-      issuetype:  d.issuetype,
-      created:    new Date(d.created),
-      firstAgent: null,
-      attnH:      d.attnH,
-      attnBreach: d.attnBreach,
-      workH:      d.workH,
-      slaResH:    d.slaResH,
-      resPct:     d.resPct,
-      resBreach:  d.resBreach,
-      resRisk:    d.resRisk,
-      isClosed:   d.isClosed,
-      issueUrl:   d.issueUrl,
-    }));
-
-    populateStatusFilter();
-    renderKPIs();
-    renderCharts();
-    renderAverages();
-    renderTable();
-
-    document.getElementById('lastUpdate').textContent =
-      'Datos: 04/06/2026 15:18 hs';
-  } catch(e) {
-    showError('Error al cargar datos: ' + e.message);
-  } finally {
-    setLoading(false);
-  }
-}
-
-(function init() {
-  // Modo standalone: datos precargados, no se necesita configuración
-  document.getElementById('configPanel').style.display = 'none';
-  document.getElementById('headerSub').textContent = 'WT · etiqueta: soporte';
-  loadData();
-  // Auto-refresh deshabilitado en modo standalone (datos fijos)
-})();
+// Auto-refresh cada 10 minutos
+setInterval(loadData, 10*60*1000);
+loadData();
 </script>
 </body>
 </html>
