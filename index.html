@@ -3,415 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SLA Dashboard — Wayni Soporte (WT)</title>
+<title>SLA Dashboard — Wayni Soporte</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
-    --bg: #f5f6f8;
-    --surface: #ffffff;
-    --surface2: #f0f1f4;
-    --border: rgba(0,0,0,0.08);
-    --text: #1a1d24;
-    --text-secondary: #6b7080;
-    --text-tertiary: #9ba0ae;
-    --blue: #2563eb;
-    --blue-bg: #eff6ff;
-    --green: #16a34a;
-    --green-bg: #f0fdf4;
-    --amber: #d97706;
-    --amber-bg: #fffbeb;
-    --red: #dc2626;
-    --red-bg: #fef2f2;
-    --purple: #7c3aed;
-    --purple-bg: #f5f3ff;
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    --font-mono: 'Consolas', 'Courier New', monospace;
+    --bg:#f5f6f8;--surface:#fff;--surface2:#f0f1f4;--border:rgba(0,0,0,0.08);
+    --text:#1a1d24;--text-secondary:#6b7080;--text-tertiary:#9ba0ae;
+    --blue:#2563eb;--blue-bg:#eff6ff;--green:#16a34a;--green-bg:#f0fdf4;
+    --amber:#d97706;--amber-bg:#fffbeb;--red:#dc2626;--red-bg:#fef2f2;
+    --radius:10px;--radius-sm:6px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+    --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+    --font-mono:'Consolas','Courier New',monospace;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
+  /* LOGIN */
+  #loginOverlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem 2rem;max-width:380px;width:90%;text-align:center;box-shadow:var(--shadow)}
+  #btnGoogle{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12);transition:box-shadow .15s}
+  #btnGoogle:hover{box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  #btnGoogle:disabled{opacity:.6;cursor:default}
+  #loginError{margin-top:1rem;font-size:12px;color:var(--red);display:none;line-height:1.5;white-space:pre-line}
 
-  /* ── CONFIG PANEL ── */
-  #configPanel {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
-  }
-  #configBox {
-    background: var(--surface); border-radius: var(--radius); padding: 2rem;
-    width: min(480px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  }
-  #configBox h2 { font-size: 18px; font-weight: 600; margin-bottom: .4rem; }
-  #configBox p { font-size: 12px; color: var(--text-secondary); margin-bottom: 1.4rem; line-height: 1.5; }
-  .cfg-field { margin-bottom: 1rem; }
-  .cfg-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .35rem; }
-  .cfg-field input, .cfg-field select {
-    width: 100%; padding: 8px 10px; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-mono);
-    background: var(--surface2); color: var(--text); outline: none;
-  }
-  .cfg-field input:focus { border-color: var(--blue); background: var(--surface); }
-  .cfg-note { font-size: 11px; color: var(--text-tertiary); margin-top: .3rem; line-height: 1.4; }
-  .mode-tab { flex:1; padding:.55rem .4rem; border:none; background:transparent; cursor:pointer; font-size:11px; font-family:var(--font); line-height:1.4; color:var(--text-secondary); border-right:1px solid var(--border); transition:background .15s,color .15s; }
-  .mode-tab:last-child { border-right:none; }
-  .mode-tab.active { background:var(--blue); color:#fff; }
-  .mode-tab small { display:block; font-size:10px; opacity:.8; }
-  .cfg-callout { font-size:12px; line-height:1.5; padding:.7rem .9rem; border-radius:var(--radius-sm); margin-bottom:1rem; }
-  .cfg-callout-blue  { background:var(--blue-bg);   color:#1d4ed8; border:1px solid #bfdbfe; }
-  .cfg-callout-amber { background:var(--amber-bg);  color:#92400e; border:1px solid #fde68a; }
-  .cfg-callout-green { background:var(--green-bg);  color:#166534; border:1px solid #bbf7d0; }
-  .cfg-btns { display: flex; gap: 8px; margin-top: 1.4rem; }
-  .btn-primary {
-    flex: 1; padding: 9px; background: var(--blue); color: #fff;
-    border: none; border-radius: var(--radius-sm); font-size: 13px;
-    font-weight: 500; cursor: pointer; transition: opacity .15s;
-  }
-  .btn-primary:hover { opacity: .88; }
-  .btn-secondary {
-    padding: 9px 16px; background: var(--surface2); color: var(--text-secondary);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 13px; cursor: pointer;
-  }
+  /* HEADER */
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+  .hdr-left{display:flex;align-items:center;gap:10px}
+  .hdr-logo{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
+  .hdr-title{font-size:14px;font-weight:600}
+  .hdr-sub{font-size:11px;color:var(--text-secondary)}
+  .hdr-right{display:flex;align-items:center;gap:8px}
+  #userBadge{display:none;font-size:11px;color:var(--text-secondary);background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:3px 10px}
+  .last-update{font-size:11px;color:var(--text-tertiary)}
+  .btn-refresh{display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer}
+  .btn-refresh.loading svg{animation:spin .8s linear infinite}
 
-  /* ── HEADER ── */
-  header {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 1.5rem; height: 52px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 50;
-  }
-  .header-left { display: flex; align-items: center; gap: 10px; }
-  .header-logo {
-    width: 28px; height: 28px; background: var(--blue); border-radius: 6px;
-    display: flex; align-items: center; justify-content: center; color: #fff;
-    font-size: 14px; font-weight: 700; flex-shrink: 0;
-  }
-  .header-title { font-size: 14px; font-weight: 600; }
-  .header-sub { font-size: 11px; color: var(--text-secondary); }
-  .header-right { display: flex; align-items: center; gap: 8px; }
-  .last-update { font-size: 11px; color: var(--text-tertiary); }
-  .btn-refresh {
-    display: flex; align-items: center; gap: 5px; padding: 6px 12px;
-    background: var(--blue-bg); color: var(--blue); border: none;
-    border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
-    cursor: pointer; transition: background .15s;
-  }
-  .btn-refresh:hover { background: #dbeafe; }
-  .btn-refresh.loading svg { animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .btn-cfg {
-    display: flex; align-items: center; gap: 5px; padding: 6px 12px;
-    background: var(--surface2); color: var(--text-secondary); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 12px; cursor: pointer;
-  }
+  /* MAIN */
+  main{padding:1.25rem 1.5rem;max-width:1400px;margin:0 auto}
+  #statusBar{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;display:none}
+  #loadingBar{background:var(--blue-bg);color:var(--blue);border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;display:none;align-items:center;gap:8px}
+  .spinner{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 
-  /* ── MAIN ── */
-  main { padding: 1.25rem 1.5rem; max-width: 1400px; margin: 0 auto; }
+  /* KPIs */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow)}
+  .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin-bottom:6px}
+  .kpi-value{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+  .kpi-sub{font-size:10px;color:var(--text-tertiary);line-height:1.4}
+  .kpi-card.danger .kpi-value{color:var(--red)}
+  .kpi-card.warn .kpi-value{color:var(--amber)}
 
-  /* ── ERROR / STATUS BAR ── */
-  #statusBar {
-    background: var(--red-bg); color: var(--red); border: 1px solid #fecaca;
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem;
-    font-size: 12px; display: none;
-  }
-  #loadingBar {
-    background: var(--blue-bg); color: var(--blue); border: 1px solid #bfdbfe;
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem;
-    font-size: 12px; display: none; align-items: center; gap: 8px;
-  }
-  .spinner { width: 14px; height: 14px; border: 2px solid #bfdbfe; border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+  /* CHARTS */
+  .charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+  .chart-ttl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:10px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary)}
+  .leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 
-  /* ── KPI GRID ── */
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
-  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow); }
-  .kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin-bottom: 6px; }
-  .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-  .kpi-sub { font-size: 10px; color: var(--text-tertiary); line-height: 1.4; }
-  .kpi-card.danger .kpi-value { color: var(--red); }
-  .kpi-card.warn .kpi-value { color: var(--amber); }
-  .kpi-card.ok .kpi-value { color: var(--green); }
+  /* AVERAGES */
+  .avg-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem}
+  .avg-hdr{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+  .avg-hdr-title{font-size:13px;font-weight:600}
+  .avg-hdr-sub{font-size:11px;color:var(--text-secondary)}
+  .avg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .avg-card{padding:1.1rem 1.25rem;border-right:1px solid var(--border)}
+  .avg-card:last-child{border-right:none}
+  .avg-card-prio{display:flex;align-items:center;gap:8px;margin-bottom:.9rem}
+  .avg-prio-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .avg-count{font-size:11px;color:var(--text-tertiary)}
+  .avg-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .avg-metric{background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .8rem}
+  .avg-metric-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:4px}
+  .avg-metric-value{font-size:20px;font-weight:700;line-height:1;margin-bottom:3px}
+  .avg-metric-limit{font-size:10px;color:var(--text-tertiary)}
+  .avg-metric-bar{height:3px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
+  .avg-metric-bar-fill{height:100%;border-radius:2px}
+  .avg-breach-row{display:flex;gap:6px;margin-top:.65rem;flex-wrap:wrap}
+  .avg-breach-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .avg-chart-row{border-top:1px solid var(--border);padding:1rem 1.25rem}
+  .avg-chart-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:10px}
+  .avg-bar-group{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .avg-bar-label{font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;text-align:right}
+  .avg-bar-track{flex:1;height:18px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+  .avg-bar-fill-h{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:9px;font-weight:600;color:#fff;white-space:nowrap;min-width:4px}
+  .avg-bar-sla-line{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,0.25);border-radius:1px}
+  .avg-bar-sla-label{position:absolute;top:-14px;font-size:9px;color:var(--text-tertiary);transform:translateX(-50%);white-space:nowrap}
 
-  /* ── CHARTS ── */
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
-  .chart-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 10px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-secondary); }
-  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  /* TABLE */
+  .table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .table-header{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .table-hdr-left{display:flex;align-items:center;gap:10px}
+  .table-title{font-size:13px;font-weight:600}
+  .count-chip{font-size:10px;background:var(--surface2);border-radius:20px;padding:2px 8px;color:var(--text-secondary);border:1px solid var(--border)}
+  .tab-row{display:flex;gap:4px}
+  .tab-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font);transition:all .15s}
+  .tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .table-filters{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;background:var(--surface2)}
+  .table-filters select,.table-filters input[type="date"]{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--font)}
+  .filter-label{font-size:10px;color:var(--text-secondary);display:flex;flex-direction:column;gap:2px}
+  .filter-label span{font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .btn-clear{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-secondary);cursor:pointer;font-family:var(--font)}
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{font-size:10px;font-weight:600;color:var(--text-secondary);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;cursor:pointer;user-select:none;background:var(--surface2)}
+  th:hover{color:var(--text)}
+  th .sa{margin-left:3px;opacity:.35;font-size:9px}
+  td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surface2)}
+  .badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .b-highest{background:#fef2f2;color:#b91c1c}
+  .b-high{background:#fff7ed;color:#c2410c}
+  .b-medium{background:#fffbeb;color:#b45309}
+  .b-low{background:#eff6ff;color:#1d4ed8}
+  .b-open{background:#eff6ff;color:#1d4ed8}
+  .b-wait{background:#f5f3ff;color:#6d28d9}
+  .b-closed{background:#f0fdf4;color:#15803d}
+  .b-breach{background:#fef2f2;color:#b91c1c}
+  .b-ok{background:#f0fdf4;color:#15803d}
+  .b-risk{background:#fffbeb;color:#b45309}
+  .b-nodata{background:var(--surface2);color:var(--text-tertiary)}
+  .sla-wrap{display:flex;align-items:center;gap:6px;min-width:120px}
+  .sla-bg{flex:1;height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}
+  .sla-fill{height:100%;border-radius:2px}
+  .key-link{color:var(--blue);font-weight:600;text-decoration:none;font-size:11px;font-family:var(--font-mono)}
+  .key-link:hover{text-decoration:underline}
+  .footnote{font-size:10px;color:var(--text-tertiary);padding:.75rem 1rem;border-top:1px solid var(--border);line-height:1.6;background:var(--surface2)}
 
-  /* ── TABLE ── */
-  .table-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .table-header { padding: .85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .table-header-left { display: flex; align-items: center; gap: 10px; }
-  .table-title { font-size: 13px; font-weight: 600; }
-  .count-chip { font-size: 10px; background: var(--surface2); border-radius: 20px; padding: 2px 8px; color: var(--text-secondary); border: 1px solid var(--border); }
-  .tab-row { display: flex; gap: 4px; }
-  .tab-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: var(--font); transition: all .15s; }
-  .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-  .table-filters { padding: .6rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; background: var(--surface2); }
-  .table-filters select { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font); }
-  .table-filters input[type="date"] { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font); }
-  .filter-label { font-size: 10px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
-  .filter-label span { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-  .btn-clear-dates { font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
-  .btn-clear-dates:hover { background: var(--surface); }
-  .tbl-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; cursor: pointer; user-select: none; background: var(--surface2); }
-  th:hover { color: var(--text); }
-  th .sa { margin-left: 3px; opacity: .35; font-size: 9px; }
-  th.sorted .sa { opacity: 1; }
-  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-  .badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
-  .b-highest { background: #fef2f2; color: #b91c1c; }
-  .b-high { background: #fff7ed; color: #c2410c; }
-  .b-medium { background: #fffbeb; color: #b45309; }
-  .b-low { background: #eff6ff; color: #1d4ed8; }
-  .b-open { background: #eff6ff; color: #1d4ed8; }
-  .b-wait { background: #f5f3ff; color: #6d28d9; }
-  .b-closed { background: #f0fdf4; color: #15803d; }
-  .b-breach { background: #fef2f2; color: #b91c1c; }
-  .b-ok { background: #f0fdf4; color: #15803d; }
-  .b-risk { background: #fffbeb; color: #b45309; }
-  .b-nodata { background: var(--surface2); color: var(--text-tertiary); }
-  .sla-wrap { display: flex; align-items: center; gap: 6px; min-width: 120px; }
-  .sla-bg { flex: 1; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
-  .sla-fill { height: 100%; border-radius: 2px; }
-  .key-link { color: var(--blue); font-weight: 600; text-decoration: none; font-size: 11px; font-family: var(--font-mono); }
-  .key-link:hover { text-decoration: underline; }
-  .auto-refresh-label { font-size: 10px; color: var(--text-tertiary); }
-
-  /* ── FOOTER NOTE ── */
-  .footnote { font-size: 10px; color: var(--text-tertiary); padding: .75rem 1rem; border-top: 1px solid var(--border); line-height: 1.6; background: var(--surface2); }
-
-  /* ── AVERAGES SECTION ── */
-  .avg-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.25rem; }
-  .avg-section-header { padding: .85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .avg-section-title { font-size: 13px; font-weight: 600; }
-  .avg-section-sub { font-size: 11px; color: var(--text-secondary); }
-  .avg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; }
-  .avg-card { padding: 1.1rem 1.25rem; border-right: 1px solid var(--border); position: relative; }
-  .avg-card:last-child { border-right: none; }
-  .avg-card-prio { display: flex; align-items: center; gap: 8px; margin-bottom: .9rem; }
-  .avg-prio-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-  .avg-count { font-size: 11px; color: var(--text-tertiary); }
-  .avg-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .avg-metric { background: var(--surface2); border-radius: var(--radius-sm); padding: .65rem .8rem; position: relative; overflow: hidden; }
-  .avg-metric-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 4px; }
-  .avg-metric-value { font-size: 20px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
-  .avg-metric-limit { font-size: 10px; color: var(--text-tertiary); }
-  .avg-metric-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
-  .avg-metric-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
-  .avg-breach-row { display: flex; gap: 6px; margin-top: .65rem; flex-wrap: wrap; }
-  .avg-breach-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
-  .avg-no-data { color: var(--text-tertiary); font-size: 12px; font-style: italic; }
-  .avg-chart-row { border-top: 1px solid var(--border); padding: 1rem 1.25rem; }
-  .avg-chart-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 10px; }
-  .avg-bar-group { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .avg-bar-label { font-size: 11px; color: var(--text-secondary); width: 65px; flex-shrink: 0; text-align: right; }
-  .avg-bar-track { flex: 1; height: 20px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
-  .avg-bar-fill-h { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; min-width: 4px; transition: width .5s ease; }
-  .avg-bar-sla-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,0.25); border-radius: 1px; }
-  .avg-bar-sla-label { position: absolute; top: -14px; font-size: 9px; color: var(--text-tertiary); transform: translateX(-50%); white-space: nowrap; }
-  @media (max-width: 900px) { .avg-card { border-right: none; border-bottom: 1px solid var(--border); } .avg-card:last-child { border-bottom: none; } }
-
-  @media (max-width: 900px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .charts-row { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    header { padding: 0 1rem; }
-    main { padding: 1rem; }
-    .kpi-grid { grid-template-columns: 1fr 1fr; }
-  }
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.avg-card{border-right:none;border-bottom:1px solid var(--border)}}
+  @media(max-width:600px){header{padding:0 1rem}main{padding:1rem}}
 </style>
 </head>
 <body>
-  <!-- ════════ GOOGLE LOGIN OVERLAY ════════ -->
-  <div id="loginOverlay" style="
-    position:fixed;inset:0;z-index:9999;
-    background:var(--bg);
-    display:flex;align-items:center;justify-content:center;
-  ">
-    <div style="
-      background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius-lg,12px);padding:2.5rem 2rem;
-      max-width:380px;width:90%;text-align:center;
-      box-shadow:var(--shadow);
-    ">
-      <div style="font-size:32px;margin-bottom:12px">📊</div>
-      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">
-        Tablero SLA — Wayni Soporte
-      </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1.5rem;line-height:1.5">
-        Acceso exclusivo para cuentas<br>
-        <strong>@waynimovil.com</strong>
-      </div>
-      <button id="btnGoogle" onclick="signInWithGoogle()" style="
-        display:flex;align-items:center;justify-content:center;gap:10px;
-        width:100%;padding:11px 16px;
-        background:#fff;color:#3c4043;
-        border:1px solid #dadce0;border-radius:8px;
-        font-size:14px;font-weight:500;cursor:pointer;
-        box-shadow:0 1px 3px rgba(0,0,0,.12);
-        transition:box-shadow .15s;
-      " onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.18)'"
-         onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.12)'">
-        <svg width="18" height="18" viewBox="0 0 48 48">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          <path fill="none" d="M0 0h48v48H0z"/>
-        </svg>
-        Iniciar sesión con Google
-      </button>
-      <div id="loginError" style="
-        margin-top:1rem;font-size:12px;color:var(--red,#dc2626);
-        display:none;line-height:1.4;
-      "></div>
-      <div style="margin-top:1.2rem;font-size:11px;color:var(--text-tertiary)">
-        Solo para uso interno de Wayni Móvil
-      </div>
-    </div>
-  </div>
 
-
-<!-- CONFIG PANEL -->
-<div id="configPanel">
-  <div id="configBox" style="width:min(560px,97vw);max-height:92vh;overflow-y:auto">
-    <h2 style="margin-bottom:.3rem">⚙️ Configuración del tablero</h2>
-
-    <!-- MODE TABS -->
-    <div style="display:flex;gap:0;border:.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.2rem;margin-top:.8rem">
-      <button id="modeTab0" class="mode-tab active" onclick="switchMode(0)">🔌 Proxy CORS<br><small>Recomendado</small></button>
-      <button id="modeTab1" class="mode-tab" onclick="switchMode(1)">📋 Pegar JSON<br><small>Sin instalación</small></button>
-      <button id="modeTab2" class="mode-tab" onclick="switchMode(2)">🏠 Servidor local<br><small>Avanzado</small></button>
-    </div>
-
-    <!-- MODE 0: CORS PROXY -->
-    <div id="modePanel0">
-      <div class="cfg-callout cfg-callout-blue">
-        <strong>Corfix proxy</strong> — Instalá la extensión <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank" style="color:var(--blue)">CORS Unblock</a> en Chrome (gratuita) o usá el proxy público <code>corsproxy.io</code>. Esto permite que el tablero llame a Jira directamente desde el browser.
-      </div>
-      <div class="cfg-field">
-        <label>URL de tu instancia Jira</label>
-        <input id="cfgDomain0" type="text" placeholder="https://waynimovil.atlassian.net" />
-      </div>
-      <div class="cfg-field">
-        <label>Email</label>
-        <input id="cfgEmail0" type="email" placeholder="tu@empresa.com" />
-      </div>
-      <div class="cfg-field">
-        <label>API Token</label>
-        <input id="cfgToken0" type="password" placeholder="Tu Jira API token" />
-        <p class="cfg-note">Generalo en: <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" style="color:var(--blue)">id.atlassian.com → API tokens</a></p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject0" type="text" value="WT" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel0" type="text" value="soporte" /></div>
-      </div>
-      <div class="cfg-field">
-        <label>Proxy</label>
-        <select id="cfgProxy" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface2);color:var(--text)">
-          <option value="none">Sin proxy — extensión CORS Unblock activa</option>
-          <option value="corsproxy">corsproxy.io (público, sin login)</option>
-          <option value="allorigins">allorigins.win (público, sin login)</option>
-        </select>
-        <p class="cfg-note">Si usás extensión CORS Unblock, elegí "Sin proxy". Si no, elegí un proxy público.</p>
-      </div>
-      <div class="cfg-field"><label>Máx. issues</label><input id="cfgMax0" type="number" value="100" min="10" max="200" /></div>
-    </div>
-
-    <!-- MODE 1: PASTE JSON -->
-    <div id="modePanel1" style="display:none">
-      <div class="cfg-callout cfg-callout-amber">
-        <strong>Sin instalación</strong> — Ejecutá este comando en tu terminal y pegá el resultado aquí. Funciona siempre, sin CORS ni extensiones.
-      </div>
-      <div style="background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:.9rem 1rem;font-size:11px;font-family:var(--font-mono);margin-bottom:1rem;line-height:1.7;overflow-x:auto;white-space:pre" id="curlCmd">curl -u "TU_EMAIL:TU_API_TOKEN" \
-  "https://waynimovil.atlassian.net/rest/api/3/search?jql=project%3DWT%20AND%20labels%3Dsoporte%20ORDER%20BY%20created%20DESC&maxResults=100&fields=summary,status,priority,created,updated,assignee,reporter,comment,resolutiondate" \
-  -H "Accept: application/json" > jira_issues.json</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-        <div class="cfg-field"><label>Tu email (para el curl)</label><input id="cfgEmail1" type="email" placeholder="tu@empresa.com" oninput="updateCurl()" /></div>
-        <div class="cfg-field"><label>API Token (para el curl)</label><input id="cfgToken1" type="password" placeholder="token" oninput="updateCurl()" /></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject1" type="text" value="WT" oninput="updateCurl()" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel1" type="text" value="soporte" oninput="updateCurl()" /></div>
-      </div>
-      <div class="cfg-field">
-        <label>Dominio Jira</label>
-        <input id="cfgDomain1" type="text" placeholder="https://waynimovil.atlassian.net" oninput="updateCurl()" />
-      </div>
-      <div class="cfg-field" style="margin-top:.5rem">
-        <label>Pegá el JSON aquí (contenido de jira_issues.json)</label>
-        <textarea id="cfgJsonPaste" rows="6" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-family:var(--font-mono);background:var(--surface2);color:var(--text);resize:vertical" placeholder='{"issues": [...], "total": 50}'></textarea>
-      </div>
-    </div>
-
-    <!-- MODE 2: LOCAL SERVER -->
-    <div id="modePanel2" style="display:none">
-      <div class="cfg-callout cfg-callout-green">
-        <strong>Servidor local con Node.js</strong> — El proxy corre en tu máquina, resuelve CORS y el tablero se actualiza solo. Ideal para uso continuo en la oficina.
-      </div>
-      <div style="background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:.9rem 1rem;font-size:11px;font-family:var(--font-mono);margin-bottom:1rem;line-height:1.8;overflow-x:auto">
-        <span style="color:#6c7086"># 1. Instalá el proxy (una sola vez)</span><br>
-        npm install -g local-cors-proxy<br><br>
-        <span style="color:#6c7086"># 2. Inicialo (dejalo corriendo)</span><br>
-        lcp --proxyUrl https://waynimovil.atlassian.net --port 8010<br><br>
-        <span style="color:#6c7086"># 3. Configurá el tablero con localhost abajo</span>
-      </div>
-      <div class="cfg-field">
-        <label>URL del proxy local</label>
-        <input id="cfgProxyLocal" type="text" value="http://localhost:8010/proxy" />
-        <p class="cfg-note">El proxy redirige al dominio de Jira. Dejá el servidor corriendo mientras usás el tablero.</p>
-      </div>
-      <div class="cfg-field"><label>Email</label><input id="cfgEmail2" type="email" placeholder="tu@empresa.com" /></div>
-      <div class="cfg-field"><label>API Token</label><input id="cfgToken2" type="password" placeholder="Tu Jira API token" /></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="cfg-field"><label>Proyecto</label><input id="cfgProject2" type="text" value="WT" /></div>
-        <div class="cfg-field"><label>Etiqueta</label><input id="cfgLabel2" type="text" value="soporte" /></div>
-      </div>
-      <div class="cfg-field"><label>Máx. issues</label><input id="cfgMax2" type="number" value="100" min="10" max="200" /></div>
-    </div>
-
-    <div class="cfg-btns">
-      <button class="btn-primary" onclick="saveConfig()">Guardar y cargar datos</button>
-      <button class="btn-secondary" onclick="closeCfg()">Cancelar</button>
-    </div>
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div style="font-size:32px;margin-bottom:12px">📊</div>
+    <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">Tablero SLA — Wayni Soporte</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1.5rem;line-height:1.5">Acceso exclusivo para cuentas<br><strong>@waynimovil.com</strong></div>
+    <button id="btnGoogle" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Iniciar sesión con Google
+    </button>
+    <div id="loginError"></div>
+    <div style="margin-top:1.2rem;font-size:11px;color:var(--text-tertiary)">Solo para uso interno de Wayni Móvil</div>
   </div>
 </div>
 
 <!-- HEADER -->
 <header>
-  <div class="header-left">
-    <div class="header-logo">W</div>
+  <div class="hdr-left">
+    <div class="hdr-logo">W</div>
     <div>
-      <div class="header-title">SLA Dashboard</div>
-      <div class="header-sub" id="headerSub">Wayni Soporte — WT · etiqueta: soporte</div>
+      <div class="hdr-title">SLA Dashboard</div>
+      <div class="hdr-sub" id="headerSub">Wayni Soporte — WT · etiqueta: soporte</div>
     </div>
   </div>
-  <div class="header-right">
+  <div class="hdr-right">
+    <span id="userBadge"></span>
     <span class="last-update" id="lastUpdate">—</span>
-    <span class="auto-refresh-label">• auto-refresh 5 min</span>
+    <span style="font-size:10px;color:var(--text-tertiary)">• auto-refresh 5 min</span>
     <button class="btn-refresh" id="btnRefresh" onclick="loadData()">
-      <svg id="refreshIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Actualizar
-    </button>
-    <button class="btn-cfg" onclick="openCfg()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Config
     </button>
   </div>
 </header>
 
 <main>
   <div id="statusBar"></div>
-  <div id="loadingBar"><div class="spinner"></div><span id="loadingMsg">Cargando issues desde Jira...</span></div>
+  <div id="loadingBar"><div class="spinner"></div><span id="loadingMsg">Cargando...</span></div>
 
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card"><div class="kpi-label">Total issues</div><div class="kpi-value" style="color:var(--text-secondary)">—</div></div>
@@ -421,30 +191,15 @@
   </div>
 
   <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-card-title">Por estado</div>
-      <div class="legend" id="legStatus"></div>
-      <div style="position:relative;height:130px"><canvas id="chartStatus" role="img" aria-label="Issues por estado"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">SLA atención (1 hora hábil)</div>
-      <div class="legend" id="legAttn"></div>
-      <div style="position:relative;height:130px"><canvas id="chartAttn" role="img" aria-label="SLA atención"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">SLA resolución</div>
-      <div class="legend" id="legRes"></div>
-      <div style="position:relative;height:130px"><canvas id="chartRes" role="img" aria-label="SLA resolución"></canvas></div>
-    </div>
+    <div class="chart-card"><div class="chart-ttl">Por estado</div><div class="legend" id="legStatus"></div><div style="position:relative;height:130px"><canvas id="chartStatus"></canvas></div></div>
+    <div class="chart-card"><div class="chart-ttl">SLA atención (1 hora hábil)</div><div class="legend" id="legAttn"></div><div style="position:relative;height:130px"><canvas id="chartAttn"></canvas></div></div>
+    <div class="chart-card"><div class="chart-ttl">SLA resolución</div><div class="legend" id="legRes"></div><div style="position:relative;height:130px"><canvas id="chartRes"></canvas></div></div>
   </div>
 
-  <!-- ── AVERAGES SECTION ── -->
   <div class="avg-section" id="avgSection" style="display:none">
-    <div class="avg-section-header">
-      <div>
-        <div class="avg-section-title">Promedios de SLA por criticidad</div>
-        <div class="avg-section-sub">Tiempo hábil promedio de atención (1.ª respuesta del agente) y resolución (tiempo transcurrido), comparado contra el límite de SLA</div>
-      </div>
+    <div class="avg-hdr">
+      <div class="avg-hdr-title">Promedios de SLA por criticidad</div>
+      <div class="avg-hdr-sub">Tiempo hábil promedio de atención y resolución vs límite de SLA</div>
     </div>
     <div class="avg-grid" id="avgGrid"></div>
     <div class="avg-chart-row">
@@ -455,12 +210,9 @@
 
   <div class="table-section">
     <div class="table-header">
-      <div class="table-header-left">
+      <div class="table-hdr-left">
         <span class="table-title">Issues</span>
         <span class="count-chip" id="countChip">—</span>
-        <span id="dateRangeBadge" style="font-size:10px;color:var(--text-secondary);display:none">
-          📅 <span id="dateRangeText"></span>
-        </span>
       </div>
       <div class="tab-row">
         <button class="tab-btn active" onclick="setView('all',this)">Todos</button>
@@ -472,10 +224,10 @@
     <div class="table-filters">
       <select id="fPriority" onchange="renderTable()"><option value="">Todas las prioridades</option><option>Highest</option><option>High</option><option>Medium</option><option>Low</option></select>
       <select id="fStatus" onchange="renderTable()"><option value="">Todos los estados</option></select>
-      <select id="fSLA" onchange="renderTable()"><option value="">Ambos SLA</option><option value="attn_breach">Atención vencida</option><option value="res_breach">Resolución incumplida</option><option value="res_risk">Resolución en riesgo</option></select>
-      <label class="filter-label"><span>Desde</span><input type="date" id="fDateFrom" onchange="renderAll()" /></label>
-      <label class="filter-label"><span>Hasta</span><input type="date" id="fDateTo" onchange="renderAll()" /></label>
-      <button class="btn-clear-dates" onclick="clearDates()" title="Limpiar fechas">✕ Fechas</button>
+      <select id="fSLA" onchange="renderTable()"><option value="">Ambos SLA</option><option value="attn_breach">Atención vencida</option><option value="res_breach">Resolución incumplida</option><option value="res_risk">En riesgo</option></select>
+      <label class="filter-label"><span>Desde</span><input type="date" id="fDateFrom" onchange="renderAll()"/></label>
+      <label class="filter-label"><span>Hasta</span><input type="date" id="fDateTo" onchange="renderAll()"/></label>
+      <button class="btn-clear" onclick="clearDates()">✕ Fechas</button>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -491,809 +243,323 @@
           <th onclick="sortBy('resPct')">SLA resolución<span class="sa">↕</span></th>
           <th>Asignado</th>
         </tr></thead>
-        <tbody id="tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Configurá las credenciales para cargar los datos</td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Iniciá sesión para ver los datos</td></tr></tbody>
       </table>
     </div>
-    <div class="footnote" id="footnote">
-      Horas hábiles: lun–vie 9–18 hs, excluyendo feriados nacionales Argentina 2026.<br>
-      SLA atención: 1h hábil desde creación hasta primer comentario del agente (no del reporter).<br>
-      SLA resolución — Highest: 4h · High: 5 días hábiles (40h) · Medium: 15 días (120h) · Low: 20 días (160h).
+    <div class="footnote">
+      Horas hábiles: lun–vie 9–18 hs · Feriados Argentina 2026 excluidos.<br>
+      SLA atención: 1h hábil desde creación hasta primer comentario del agente.<br>
+      SLA resolución — Highest: 4h · High: 40h (5 días) · Medium: 120h (15 días) · Low: 160h (20 días).
     </div>
   </div>
 </main>
 
+<script src="https://accounts.google.com/gsi/client" async></script>
 <script>
-// ════════════════════════════════════════════════
-// CONSTANTES SLA Y CALENDARIO
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════
+const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzJP6iRnmy2Ocf5HY4XuD9ewUXcOGF1wdw603vuTm71psBcVb1OQ5nUXWmKpS5swBtImQ/exec';
+const GOOGLE_CLIENT_ID = '534563550978-3538g7hc2n0qjirnkvec1ngj4fejlrd8.apps.googleusercontent.com';
+const ALLOWED_DOMAIN   = 'waynimovil.com';
+
+// ══════════════════════════════════════════
+// SLA Y CALENDARIO
+// ══════════════════════════════════════════
 const HOLIDAYS = new Set([
-  '2026-01-01','2026-02-16','2026-02-17',
-  '2026-03-23','2026-03-24',
-  '2026-04-02','2026-04-03',
-  '2026-05-01','2026-05-25',
-  '2026-06-15','2026-06-20',
-  '2026-07-09','2026-07-10',
-  '2026-08-17','2026-10-12',
-  '2026-11-23',
-  '2026-12-07','2026-12-08','2026-12-25'
+  '2026-01-01','2026-02-16','2026-02-17','2026-03-23','2026-03-24',
+  '2026-04-02','2026-04-03','2026-05-01','2026-05-25','2026-06-15',
+  '2026-06-20','2026-07-09','2026-07-10','2026-08-17','2026-10-12',
+  '2026-11-23','2026-12-07','2026-12-08','2026-12-25'
 ]);
 const WORK_START = 9, WORK_END = 18;
-const SLA_RES = { Highest: 4, High: 40, Medium: 120, Low: 160 };
+const SLA_RES = { Highest:4, High:40, Medium:120, Low:160 };
 const SLA_ATTN = 1;
-const PRIO_ORDER = { Highest: 0, High: 1, Medium: 2, Low: 3 };
+const PRIO_ORDER = { Highest:0, High:1, Medium:2, Low:3 };
 
 function isWorkDay(d) {
   const wd = d.getDay();
-  if (wd === 0 || wd === 6) return false;
-  const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  return !HOLIDAYS.has(key);
+  if (wd===0||wd===6) return false;
+  return !HOLIDAYS.has(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
 }
-
 function workHoursBetween(from, to) {
-  if (!from || !to || to <= from) return 0;
-  let total = 0;
-  let cur = new Date(from);
-  while (cur < to) {
+  if (!from||!to||to<=from) return 0;
+  let total=0, cur=new Date(from);
+  while (cur<to) {
     if (isWorkDay(cur)) {
-      const ds = new Date(cur); ds.setHours(WORK_START,0,0,0);
-      const de = new Date(cur); de.setHours(WORK_END,0,0,0);
-      const s = Math.max(cur.getTime(), ds.getTime());
-      const e = Math.min(to.getTime(), de.getTime());
-      if (e > s) total += (e - s) / 3600000;
+      const ds=new Date(cur); ds.setHours(WORK_START,0,0,0);
+      const de=new Date(cur); de.setHours(WORK_END,0,0,0);
+      const s=Math.max(cur.getTime(),ds.getTime()), e=Math.min(to.getTime(),de.getTime());
+      if (e>s) total+=(e-s)/3600000;
     }
-    cur = new Date(cur);
-    cur.setDate(cur.getDate() + 1);
-    cur.setHours(WORK_START, 0, 0, 0);
+    cur=new Date(cur); cur.setDate(cur.getDate()+1); cur.setHours(WORK_START,0,0,0);
   }
   return total;
 }
 
-// ════════════════════════════════════════════════
-// CONFIG — MULTI MODE
-// ════════════════════════════════════════════════
-let cfg = {};
-let currentMode = 0; // 0=proxy/ext, 1=paste json, 2=local server
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+let googleToken = null;
 
-function switchMode(m) {
-  currentMode = m;
-  [0,1,2].forEach(i => {
-    document.getElementById('modePanel'+i).style.display = i===m ? '' : 'none';
-    document.getElementById('modeTab'+i).classList.toggle('active', i===m);
-  });
+function signInWithGoogle() {
+  const btn = document.getElementById('btnGoogle');
+  btn.disabled=true; btn.textContent='Conectando...';
+  google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'email profile',
+    callback: (resp) => {
+      if (resp.error) {
+        showLoginError('Error Google: '+resp.error);
+        btn.disabled=false; btn.innerHTML=getBtnHTML(); return;
+      }
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':'Bearer '+resp.access_token}})
+        .then(r=>r.json())
+        .then(user=>{
+          const email=user.email||'';
+          if (!email.endsWith('@'+ALLOWED_DOMAIN)) {
+            showLoginError('⛔ Acceso denegado.\nTu cuenta ('+email+') no pertenece a @'+ALLOWED_DOMAIN+'.\nUsá tu cuenta corporativa.');
+            btn.disabled=false; btn.innerHTML=getBtnHTML(); return;
+          }
+          googleToken=resp.access_token;
+          document.getElementById('loginOverlay').style.display='none';
+          const b=document.getElementById('userBadge'); b.textContent=user.name||email; b.style.display='inline-block';
+          loadData();
+        })
+        .catch(err=>{ showLoginError('Error al verificar: '+err.message); btn.disabled=false; btn.innerHTML=getBtnHTML(); });
+    }
+  }).requestAccessToken();
 }
 
-function updateCurl() {
-  const email   = document.getElementById('cfgEmail1').value   || 'TU_EMAIL';
-  const token   = document.getElementById('cfgToken1').value   || 'TU_API_TOKEN';
-  const domain  = document.getElementById('cfgDomain1').value  || 'https://waynimovil.atlassian.net';
-  const proj    = document.getElementById('cfgProject1').value || 'WT';
-  const lbl     = document.getElementById('cfgLabel1').value   || 'soporte';
-  const jql     = encodeURIComponent(`project=${proj} AND labels=${lbl} ORDER BY created DESC`);
-  const fields  = 'summary,status,priority,created,updated,assignee,reporter,comment,resolutiondate';
-  document.getElementById('curlCmd').textContent =
-    `curl -u "${email}:${token}" \\\n  -X POST "${domain}/rest/api/3/search/jql" \\\n  -H "Accept: application/json" -H "Content-Type: application/json" \\\n  --ssl-no-revoke \\\n  -d "{\"jql\":\"project=${proj} AND labels=${lbl} ORDER BY created DESC\",\"maxResults\":100,\"fields\":[\"summary\",\"status\",\"priority\",\"created\",\"updated\",\"assignee\",\"reporter\",\"comment\",\"resolutiondate\"]}" \\\n  -o jira_issues.json`;
+function getBtnHTML(){
+  return `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Reintentar`;
 }
 
-function loadConfig() {
-  const saved = localStorage.getItem('wt_sla_cfg');
-  if (saved) cfg = JSON.parse(saved);
-  return !!cfg.mode !== undefined && (cfg.jsonData || cfg.token);
+function showLoginError(msg) {
+  const el=document.getElementById('loginError');
+  el.textContent=msg; el.style.display='block';
 }
 
-function saveConfig() {
-  const m = currentMode;
-  cfg = { mode: m };
-  if (m === 0) {
-    cfg.domain     = document.getElementById('cfgDomain0').value.trim().replace(/\/$/,'');
-    cfg.email      = document.getElementById('cfgEmail0').value.trim();
-    cfg.token      = document.getElementById('cfgToken0').value.trim();
-    cfg.project    = document.getElementById('cfgProject0').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel0').value.trim() || 'soporte';
-    cfg.proxy      = document.getElementById('cfgProxy').value;
-    cfg.maxResults = parseInt(document.getElementById('cfgMax0').value) || 100;
-    if (!cfg.email || !cfg.token || !cfg.domain) { alert('Completá todos los campos'); return; }
-  } else if (m === 1) {
-    const raw = document.getElementById('cfgJsonPaste').value.trim();
-    if (!raw) { alert('Pegá el JSON del resultado del curl'); return; }
-    try { JSON.parse(raw); } catch(e) { alert('El JSON no es válido: ' + e.message); return; }
-    cfg.jsonData   = raw;
-    cfg.project    = document.getElementById('cfgProject1').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel1').value.trim() || 'soporte';
-    cfg.domain     = document.getElementById('cfgDomain1').value.trim().replace(/\/$/,'') || 'https://waynimovil.atlassian.net';
-  } else {
-    cfg.proxyLocal = document.getElementById('cfgProxyLocal').value.trim();
-    cfg.email      = document.getElementById('cfgEmail2').value.trim();
-    cfg.token      = document.getElementById('cfgToken2').value.trim();
-    cfg.project    = document.getElementById('cfgProject2').value.trim() || 'WT';
-    cfg.label      = document.getElementById('cfgLabel2').value.trim() || 'soporte';
-    cfg.maxResults = parseInt(document.getElementById('cfgMax2').value) || 100;
-    cfg.domain     = cfg.proxyLocal;
-    if (!cfg.email || !cfg.token || !cfg.proxyLocal) { alert('Completá todos los campos'); return; }
-  }
-  localStorage.setItem('wt_sla_cfg', JSON.stringify(cfg));
-  document.getElementById('headerSub').textContent = (cfg.project||'WT') + ' · etiqueta: ' + (cfg.label||'soporte');
-  closeCfg();
-  loadData();
+// ══════════════════════════════════════════
+// DATOS
+// ══════════════════════════════════════════
+let allIssues=[], charts={};
+
+function setLoading(on,msg){
+  const lb=document.getElementById('loadingBar');
+  lb.style.display=on?'flex':'none';
+  if(msg) document.getElementById('loadingMsg').textContent=msg;
+  document.getElementById('btnRefresh').classList.toggle('loading',on);
 }
-
-function openCfg() {
-  const m = cfg.mode || 0;
-  switchMode(m);
-  if (m === 0) {
-    document.getElementById('cfgDomain0').value  = cfg.domain  || '';
-    document.getElementById('cfgEmail0').value   = cfg.email   || '';
-    document.getElementById('cfgToken0').value   = cfg.token   || '';
-    document.getElementById('cfgProject0').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel0').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgProxy').value    = cfg.proxy   || 'none';
-    document.getElementById('cfgMax0').value     = cfg.maxResults || 100;
-  } else if (m === 1) {
-    document.getElementById('cfgProject1').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel1').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgDomain1').value  = cfg.domain  || '';
-    if (cfg.jsonData) document.getElementById('cfgJsonPaste').value = cfg.jsonData;
-  } else {
-    document.getElementById('cfgProxyLocal').value = cfg.proxyLocal || 'http://localhost:8010/proxy';
-    document.getElementById('cfgEmail2').value   = cfg.email   || '';
-    document.getElementById('cfgToken2').value   = cfg.token   || '';
-    document.getElementById('cfgProject2').value = cfg.project || 'WT';
-    document.getElementById('cfgLabel2').value   = cfg.label   || 'soporte';
-    document.getElementById('cfgMax2').value     = cfg.maxResults || 100;
-  }
-  document.getElementById('configPanel').style.display = 'flex';
-}
-
-function closeCfg() {
-  document.getElementById('configPanel').style.display = 'none';
-}
-
-// ════════════════════════════════════════════════
-// FETCH JIRA — MULTI MODE
-// ════════════════════════════════════════════════
-let allIssues = [];
-let charts = {};
-
-function setLoading(on, msg) {
-  const lb = document.getElementById('loadingBar');
-  lb.style.display = on ? 'flex' : 'none';
-  if (msg) document.getElementById('loadingMsg').textContent = msg;
-  const btn = document.getElementById('btnRefresh');
-  btn.classList.toggle('loading', on);
-}
-
-function showError(msg) {
-  const sb = document.getElementById('statusBar');
-  sb.style.display = msg ? 'block' : 'none';
-  sb.textContent = msg || '';
-}
-
-async function jiraGet(path) {
-  const auth = btoa(cfg.email + ':' + cfg.token);
-  let url;
-  if (cfg.mode === 2) {
-    // Local proxy: proxy strips /proxy prefix and forwards to Jira
-    url = cfg.proxyLocal + '/rest/api/3/' + path;
-  } else if (cfg.proxy === 'corsproxy') {
-    url = 'https://corsproxy.io/?' + encodeURIComponent(cfg.domain + '/rest/api/3/' + path);
-  } else if (cfg.proxy === 'allorigins') {
-    url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cfg.domain + '/rest/api/3/' + path);
-  } else {
-    url = cfg.domain + '/rest/api/3/' + path;
-  }
-  const headers = { 'Accept': 'application/json' };
-  // allorigins doesn't forward custom headers — auth goes in URL for that case
-  if (cfg.proxy !== 'allorigins') headers['Authorization'] = 'Basic ' + auth;
-  const res = await fetch(url, { headers });
-  if (!res.ok) {
-    const txt = await res.text().catch(()=>'');
-    throw new Error('Jira API ' + res.status + (txt ? ': ' + txt.slice(0,200) : ''));
-  }
-  return res.json();
-}
-
-async function fetchAllIssues() {
-  // Mode 1: use pasted JSON
-  if (cfg.mode === 1 && cfg.jsonData) {
-    const parsed = JSON.parse(cfg.jsonData);
-    return parsed.issues || parsed.values || [];
-  }
-  const auth = btoa(cfg.email + ':' + cfg.token);
-  const body = JSON.stringify({
-    jql: `project = ${cfg.project} AND labels = ${cfg.label} ORDER BY created DESC`,
-    maxResults: cfg.maxResults || 100,
-    fields: ['summary','status','priority','created','updated','assignee','reporter','comment','resolutiondate']
-  });
-  let url;
-  if (cfg.mode === 2) {
-    url = cfg.proxyLocal + '/rest/api/3/search/jql';
-  } else if (cfg.proxy === 'corsproxy') {
-    url = 'https://corsproxy.io/?' + encodeURIComponent(cfg.domain + '/rest/api/3/search/jql');
-  } else if (cfg.proxy === 'allorigins') {
-    url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cfg.domain + '/rest/api/3/search/jql');
-  } else {
-    url = cfg.domain + '/rest/api/3/search/jql';
-  }
-  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
-  if (cfg.proxy !== 'allorigins') headers['Authorization'] = 'Basic ' + auth;
-  const res = await fetch(url, { method: 'POST', headers, body });
-  if (!res.ok) {
-    const txt = await res.text().catch(()=>'');
-    throw new Error('Jira API ' + res.status + (txt ? ': ' + txt.slice(0,200) : ''));
-  }
-  const data = await res.json();
-  return data.issues || data.values || [];
+function showError(msg){
+  const sb=document.getElementById('statusBar');
+  sb.style.display=msg?'block':'none'; sb.textContent=msg||'';
 }
 
 async function loadData() {
-  showError('');
-  setLoading(true, 'Conectando con Jira...');
+  if (!googleToken) return;
+  showError(''); setLoading(true,'Trayendo datos del sheet...');
   try {
-    setLoading(true, 'Trayendo issues (' + (cfg.maxResults||100) + ' máx.)...');
-    const raw = await fetchAllIssues();
-
-    setLoading(true, 'Calculando horas hábiles y SLAs...');
-    const now = new Date();
-    allIssues = raw.map(i => processIssue(i, now));
-
-    populateStatusFilter();
-    renderKPIs();
-    renderCharts();
-    renderAverages();
-    renderTable();
-
-    document.getElementById('lastUpdate').textContent =
-      'Actualizado: ' + now.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    const res = await fetch(APPS_SCRIPT_URL+'?token='+encodeURIComponent(googleToken));
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error+(data.message?': '+data.message:''));
+    if (!data.issues||!data.issues.length) throw new Error('Sin datos en el sheet. Ejecutá syncToSheet() en Apps Script.');
+    setLoading(true,'Calculando SLAs...');
+    const now=new Date();
+    allIssues=data.issues.map(i=>processIssue(i,now));
+    populateStatusFilter(); renderKPIs(); renderCharts(); renderAverages(); renderTable();
+    const upd=data.updated?new Date(data.updated).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    document.getElementById('lastUpdate').textContent='Datos: '+upd;
+    document.getElementById('headerSub').textContent=(data.project||'WT')+' · etiqueta: '+(data.label||'soporte');
   } catch(e) {
-    let hint = '';
-    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-      if (cfg.mode === 0 && cfg.proxy === 'none')
-        hint = ' → Instalá la extensión CORS Unblock o elegí un proxy público en Config.';
-      else if (cfg.mode === 0)
-        hint = ' → El proxy público puede estar caído. Probá con otro en Config.';
-      else if (cfg.mode === 2)
-        hint = ' → Verificá que el servidor local esté corriendo (lcp --proxyUrl ...).';
-    }
-    showError('Error: ' + e.message + hint);
-  } finally {
-    setLoading(false);
-  }
+    showError('❌ '+e.message);
+  } finally { setLoading(false); }
 }
 
-function processIssue(i, now) {
-  const f = i.fields;
-  const created = new Date(f.created);
-  const reporterId = (f.reporter || {}).accountId || '';
-
-  const comments = (f.comment || {}).comments || [];
-  const firstAgentComment = comments.find(c => c.author?.accountId !== reporterId);
-  const firstAgent = firstAgentComment ? new Date(firstAgentComment.created) : null;
-
-  const attnH = firstAgent ? workHoursBetween(created, firstAgent) : null;
-  const attnBreach = attnH !== null ? attnH > SLA_ATTN : null;
-
-  const priority = (f.priority || {}).name || 'Medium';
-  const status   = (f.status || {}).name || '';
-  const slaResH  = SLA_RES[priority] || 120;
-  const workH    = workHoursBetween(created, now);
-  const resPct   = Math.round((workH / slaResH) * 100);
-  const isClosed = status === 'Cerrado' || status === 'Done' || status === 'Closed' || status === 'Resolved';
-  const resBreach = !isClosed && workH > slaResH;
-  const resRisk   = !isClosed && !resBreach && resPct >= 75;
-  const assignee  = (f.assignee || {}).displayName || 'Sin asignar';
-
+function processIssue(i,now){
+  const f=i.fields;
+  const created=new Date(f.created);
+  const reporterId=(f.reporter||{}).accountId||'';
+  const comments=(f.comment||{}).comments||[];
+  const firstAgent=comments.find(c=>c.author?.accountId!==reporterId);
+  const firstAgentDt=firstAgent?new Date(firstAgent.created):null;
+  const attnH=firstAgentDt?workHoursBetween(created,firstAgentDt):null;
+  const attnBreach=attnH!==null?attnH>SLA_ATTN:null;
+  const priority=(f.priority||{}).name||'Medium';
+  const status=(f.status||{}).name||'';
+  const slaResH=SLA_RES[priority]||120;
+  const workH=workHoursBetween(created,now);
+  const resPct=Math.round(workH/slaResH*100);
+  const isClosed=/cerrado|done|closed|resolved/i.test(status);
+  const resBreach=!isClosed&&workH>slaResH;
+  const resRisk=!isClosed&&!resBreach&&resPct>=75;
   return {
-    key: i.key, summary: f.summary || '', status, priority,
-    created, firstAgent, attnH, attnBreach,
-    workH, slaResH, resPct, resBreach, resRisk, isClosed, assignee,
-    issueUrl: 'https://waynimovil.atlassian.net/browse/' + i.key,
+    key:i.key, summary:f.summary||'', status, priority,
+    created, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
+    assignee:(f.assignee||{}).displayName||'Sin asignar',
+    issueUrl:'https://waynimovil.atlassian.net/browse/'+i.key,
   };
 }
 
-// ════════════════════════════════════════════════
-// RENDER KPIs
-// ════════════════════════════════════════════════
-function renderKPIs() {
-  const issues = getDateFilteredIssues();
-  const open   = issues.filter(i => !i.isClosed).length;
-  const closed = issues.filter(i => i.isClosed).length;
-  const attnB  = issues.filter(i => i.attnBreach === true).length;
-  const attnBO = issues.filter(i => !i.isClosed && i.attnBreach === true).length;
-  const resB   = issues.filter(i => i.resBreach).length;
-  const resR   = issues.filter(i => i.resRisk).length;
-  document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-label">Total issues</div>
-      <div class="kpi-value" style="color:var(--blue)">${issues.length}</div>
-      <div class="kpi-sub">${open} abiertos · ${closed} cerrados</div>
-    </div>
-    <div class="kpi-card danger">
-      <div class="kpi-label">SLA atención vencido</div>
-      <div class="kpi-value">${attnB}</div>
-      <div class="kpi-sub">${attnBO} activos sin atender en &lt;1h</div>
-    </div>
-    <div class="kpi-card danger">
-      <div class="kpi-label">SLA resolución incumplido</div>
-      <div class="kpi-value">${resB}</div>
-      <div class="kpi-sub">issues abiertos fuera de SLA</div>
-    </div>
-    <div class="kpi-card warn">
-      <div class="kpi-label">En riesgo resolución</div>
-      <div class="kpi-value">${resR}</div>
-      <div class="kpi-sub">&gt;75% del tiempo hábil consumido</div>
-    </div>`;
+// ══════════════════════════════════════════
+// KPIs
+// ══════════════════════════════════════════
+function renderKPIs(){
+  const issues=getFiltered();
+  const open=issues.filter(i=>!i.isClosed).length, closed=issues.filter(i=>i.isClosed).length;
+  const attnB=issues.filter(i=>i.attnBreach===true).length;
+  const attnBO=issues.filter(i=>!i.isClosed&&i.attnBreach===true).length;
+  const resB=issues.filter(i=>i.resBreach).length, resR=issues.filter(i=>i.resRisk).length;
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Total issues</div><div class="kpi-value" style="color:var(--blue)">${issues.length}</div><div class="kpi-sub">${open} abiertos · ${closed} cerrados</div></div>
+    <div class="kpi-card danger"><div class="kpi-label">SLA atención vencido</div><div class="kpi-value">${attnB}</div><div class="kpi-sub">${attnBO} activos sin atender en &lt;1h</div></div>
+    <div class="kpi-card danger"><div class="kpi-label">SLA resolución incumplido</div><div class="kpi-value">${resB}</div><div class="kpi-sub">issues abiertos fuera de SLA</div></div>
+    <div class="kpi-card warn"><div class="kpi-label">En riesgo resolución</div><div class="kpi-value">${resR}</div><div class="kpi-sub">&gt;75% del tiempo consumido</div></div>`;
 }
 
-// ════════════════════════════════════════════════
-// RENDER CHARTS
-// ════════════════════════════════════════════════
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
-
-function makeDonut(id, labels, data, colors, legId) {
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function makeDonut(id,labels,data,colors,legId){
   destroyChart(id);
-  document.getElementById(legId).innerHTML = labels.map((l,i) =>
-    `<span class="legend-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l} (${data[i]})</span>`
-  ).join('');
-  charts[id] = new Chart(document.getElementById(id), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-  });
+  document.getElementById(legId).innerHTML=labels.map((l,i)=>`<span class="legend-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l} (${data[i]})</span>`).join('');
+  charts[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+}
+function renderCharts(){
+  const issues=getFiltered();
+  const wip=issues.filter(i=>i.status==='Trabajo en curso').length;
+  const wait=issues.filter(i=>i.status==='Esperando la aprobación').length;
+  const closed=issues.filter(i=>i.isClosed).length;
+  const other=issues.length-wip-wait-closed;
+  const sL=['Trabajo en curso','Esp. aprobación','Cerrado'], sD=[wip,wait,closed];
+  if(other>0){sL.push('Otros');sD.push(other);}
+  makeDonut('chartStatus',sL,sD,['#3b82f6','#8b5cf6','#22c55e','#94a3b8'],'legStatus');
+  makeDonut('chartAttn',['OK','Vencido','Sin dato'],
+    [issues.filter(i=>i.attnBreach===false).length,issues.filter(i=>i.attnBreach===true).length,issues.filter(i=>i.attnH===null).length],
+    ['#22c55e','#ef4444','#94a3b8'],'legAttn');
+  makeDonut('chartRes',['OK','En riesgo','Incumplido','Cerrado'],
+    [issues.filter(i=>!i.isClosed&&!i.resBreach&&!i.resRisk).length,issues.filter(i=>i.resRisk).length,issues.filter(i=>i.resBreach).length,closed],
+    ['#22c55e','#f59e0b','#ef4444','#94a3b8'],'legRes');
 }
 
-function renderCharts() {
-  const issues = getDateFilteredIssues();
-  const open   = issues.filter(i=>!i.isClosed).length;
-  const wait   = issues.filter(i=>i.status==='Esperando la aprobación').length;
-  const wip    = issues.filter(i=>i.status==='Trabajo en curso').length;
-  const closed = issues.filter(i=>i.isClosed).length;
-  const other  = issues.length - wip - wait - closed;
-
-  const statusLabels = ['Trabajo en curso','Esp. aprobación','Cerrado'];
-  const statusData   = [wip, wait, closed];
-  if (other > 0) { statusLabels.push('Otros'); statusData.push(other); }
-  makeDonut('chartStatus', statusLabels, statusData, ['#3b82f6','#8b5cf6','#22c55e','#94a3b8'], 'legStatus');
-
-  const attnOk = issues.filter(i=>i.attnBreach===false).length;
-  const attnBr = issues.filter(i=>i.attnBreach===true).length;
-  const attnNd = issues.filter(i=>i.attnH===null).length;
-  makeDonut('chartAttn', ['OK','Vencido','Sin dato'], [attnOk, attnBr, attnNd], ['#22c55e','#ef4444','#94a3b8'], 'legAttn');
-
-  const resOk  = issues.filter(i=>!i.isClosed&&!i.resBreach&&!i.resRisk).length;
-  const resR   = issues.filter(i=>i.resRisk).length;
-  const resB   = issues.filter(i=>i.resBreach).length;
-  makeDonut('chartRes', ['OK','En riesgo','Incumplido','Cerrado'], [resOk, resR, resB, closed], ['#22c55e','#f59e0b','#ef4444','#94a3b8'], 'legRes');
-}
-
-// ════════════════════════════════════════════════
-// RENDER AVERAGES
-// ════════════════════════════════════════════════
-function renderAverages() {
-  const issues = getDateFilteredIssues();
-  const PRIO_CFG = [
-    { key: 'Highest', label: 'Highest', cls: 'b-highest', color: '#dc2626', slaAttn: 1, slaRes: 4  },
-    { key: 'High',    label: 'High',    cls: 'b-high',    color: '#ea580c', slaAttn: 1, slaRes: 40 },
-    { key: 'Medium',  label: 'Medium',  cls: 'b-medium',  color: '#d97706', slaAttn: 1, slaRes: 120},
-    { key: 'Low',     label: 'Low',     cls: 'b-low',     color: '#2563eb', slaAttn: 1, slaRes: 160},
-  ];
-
-  // Agrupar
-  const byP = {};
-  PRIO_CFG.forEach(p => { byP[p.key] = { attn: [], res: [], attnBreach: 0, resBreach: 0, total: 0 }; });
-  issues.forEach(i => {
-    if (!byP[i.priority]) return;
-    const g = byP[i.priority];
-    g.total++;
-    if (i.attnH !== null && i.attnH !== undefined) g.attn.push(i.attnH);
+// ══════════════════════════════════════════
+// AVERAGES
+// ══════════════════════════════════════════
+function renderAverages(){
+  const issues=getFiltered();
+  const PRIOS=[{key:'Highest',cls:'b-highest',slaRes:4},{key:'High',cls:'b-high',slaRes:40},{key:'Medium',cls:'b-medium',slaRes:120},{key:'Low',cls:'b-low',slaRes:160}];
+  const byP={};
+  PRIOS.forEach(p=>{byP[p.key]={attn:[],res:[],attnBreach:0,resBreach:0,total:0};});
+  issues.forEach(i=>{
+    if(!byP[i.priority]) return;
+    const g=byP[i.priority]; g.total++;
+    if(i.attnH!==null) g.attn.push(i.attnH);
     g.res.push(i.workH);
-    if (i.attnBreach === true) g.attnBreach++;
-    if (i.resBreach) g.resBreach++;
+    if(i.attnBreach===true) g.attnBreach++;
+    if(i.resBreach) g.resBreach++;
   });
+  const active=PRIOS.filter(p=>byP[p.key].total>0);
+  if(!active.length) return;
+  document.getElementById('avgSection').style.display='';
+  const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
+  const fH=h=>h===null?'—':h<1?Math.round(h*60)+' min':h<24?h.toFixed(1)+'h':(h/9).toFixed(1)+'d';
+  const cFor=(v,l)=>v/l>1?'#ef4444':v/l>=.75?'#f59e0b':'#22c55e';
 
-  const activePrios = PRIO_CFG.filter(p => byP[p.key].total > 0);
-  if (!activePrios.length) return;
-
-  document.getElementById('avgSection').style.display = '';
-
-  function fmtH(h) {
-    if (h === null || h === undefined) return '—';
-    if (h < 1) return Math.round(h * 60) + ' min';
-    if (h < 24) return h.toFixed(1) + 'h';
-    return (h / 9).toFixed(1) + 'd';
-  }
-  function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
-  function pct(val, limit) { return val === null ? 0 : Math.min((val/limit)*100, 100); }
-  function colorFor(val, limit) {
-    const r = val / limit;
-    if (r > 1)    return '#ef4444';
-    if (r >= 0.75) return '#f59e0b';
-    return '#22c55e';
-  }
-
-  // ── Cards
-  document.getElementById('avgGrid').innerHTML = activePrios.map(p => {
-    const g   = byP[p.key];
-    const aA  = avg(g.attn);
-    const aR  = avg(g.res);
-    const attnPct = pct(aA, p.slaAttn);
-    const resPct  = pct(aR, p.slaRes);
-    const attnColor = aA !== null ? colorFor(aA, p.slaAttn) : '#94a3b8';
-    const resColor  = aR !== null ? colorFor(aR, p.slaRes)  : '#94a3b8';
-    const attnCompliance = g.attn.length ? Math.round(((g.attn.length - g.attnBreach) / g.attn.length) * 100) : null;
-    const openIssues = issues.filter(i => i.priority === p.key && !i.isClosed).length;
-
+  document.getElementById('avgGrid').innerHTML=active.map(p=>{
+    const g=byP[p.key],aA=avg(g.attn),aR=avg(g.res);
+    const aC=aA!==null?cFor(aA,1):'#94a3b8', rC=aR!==null?cFor(aR,p.slaRes):'#94a3b8';
+    const comp=g.attn.length?Math.round((g.attn.length-g.attnBreach)/g.attn.length*100):null;
+    const openN=issues.filter(i=>i.priority===p.key&&!i.isClosed).length;
     return `<div class="avg-card">
-      <div class="avg-card-prio">
-        <span class="avg-prio-badge ${p.cls}">${p.label}</span>
-        <span class="avg-count">${g.total} issues · ${openIssues} abiertos</span>
-      </div>
+      <div class="avg-card-prio"><span class="avg-prio-badge ${p.cls}">${p.key}</span><span class="avg-count">${g.total} issues · ${openN} abiertos</span></div>
       <div class="avg-metrics">
-        <div class="avg-metric">
-          <div class="avg-metric-label">⚡ Atención promedio</div>
-          <div class="avg-metric-value" style="color:${attnColor}">${aA !== null ? fmtH(aA) : '<span class="avg-no-data">Sin datos</span>'}</div>
-          <div class="avg-metric-limit">Límite SLA: ${fmtH(p.slaAttn)}</div>
-          ${aA !== null ? `<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${attnPct}%;background:${attnColor}"></div></div>` : ''}
-        </div>
-        <div class="avg-metric">
-          <div class="avg-metric-label">🕐 Resolución promedio</div>
-          <div class="avg-metric-value" style="color:${resColor}">${aR !== null ? fmtH(aR) : '<span class="avg-no-data">Sin datos</span>'}</div>
-          <div class="avg-metric-limit">Límite SLA: ${fmtH(p.slaRes)}</div>
-          ${aR !== null ? `<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${resPct}%;background:${resColor}"></div></div>` : ''}
-        </div>
+        <div class="avg-metric"><div class="avg-metric-label">⚡ Atención prom.</div><div class="avg-metric-value" style="color:${aC}">${aA!==null?fH(aA):'Sin datos'}</div><div class="avg-metric-limit">Límite: 1h</div>${aA!==null?`<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${Math.min(aA*100,100)}%;background:${aC}"></div></div>`:''}</div>
+        <div class="avg-metric"><div class="avg-metric-label">🕐 Resolución prom.</div><div class="avg-metric-value" style="color:${rC}">${aR!==null?fH(aR):'Sin datos'}</div><div class="avg-metric-limit">Límite: ${fH(p.slaRes)}</div>${aR!==null?`<div class="avg-metric-bar"><div class="avg-metric-bar-fill" style="width:${Math.min(aR/p.slaRes*100,100)}%;background:${rC}"></div></div>`:''}</div>
       </div>
       <div class="avg-breach-row">
-        ${attnCompliance !== null
-          ? `<span class="avg-breach-chip" style="background:${attnCompliance>=80?'#f0fdf4':'#fef2f2'};color:${attnCompliance>=80?'#15803d':'#b91c1c'}">Atención: ${attnCompliance}% cumplimiento</span>`
-          : ''}
-        ${g.resBreach > 0
-          ? `<span class="avg-breach-chip" style="background:#fef2f2;color:#b91c1c">${g.resBreach} resolución${g.resBreach>1?'es':''} incumplida${g.resBreach>1?'s':''}</span>`
-          : openIssues > 0
-            ? `<span class="avg-breach-chip" style="background:#f0fdf4;color:#15803d">Resolución: 0 incumplimientos</span>`
-            : ''}
+        ${comp!==null?`<span class="avg-breach-chip" style="background:${comp>=80?'#f0fdf4':'#fef2f2'};color:${comp>=80?'#15803d':'#b91c1c'}">Atención: ${comp}% cumplimiento</span>`:''}
+        ${g.resBreach>0?`<span class="avg-breach-chip" style="background:#fef2f2;color:#b91c1c">${g.resBreach} resolución incumplida</span>`:openN>0?`<span class="avg-breach-chip" style="background:#f0fdf4;color:#15803d">0 incumplimientos</span>`:''}
       </div>
     </div>`;
   }).join('');
 
-  // ── Bar chart comparativo
-  const maxVal = Math.max(...activePrios.map(p => {
-    const aR = avg(byP[p.key].res);
-    return Math.max(aR || 0, p.slaRes * 0.1);
-  }));
-  const scale = activePrios.reduce((m, p) => Math.max(m, p.slaRes, avg(byP[p.key].res)||0), 0);
-
-  document.getElementById('avgBars').innerHTML = activePrios.map(p => {
-    const g  = byP[p.key];
-    const aA = avg(g.attn);
-    const aR = avg(g.res);
-    const slaLinePct = Math.min((p.slaRes / scale) * 100, 100);
-    const resBarPct  = aR !== null ? Math.min((aR / scale) * 100, 100) : 0;
-    const attnBarPct = aA !== null ? Math.min((aA / p.slaRes) * 100 * (p.slaRes / scale), 100) : 0;
-    const resColor   = aR !== null ? colorFor(aR, p.slaRes) : '#94a3b8';
-
-    return `
-    <div style="margin-bottom:1rem">
-      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:8px">
-        <span class="avg-prio-badge ${p.cls}" style="font-size:10px;padding:1px 8px">${p.label}</span>
-        <span style="font-weight:400;color:var(--text-tertiary)">${g.total} issues</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="avg-bar-group" style="margin-bottom:0">
-          <div class="avg-bar-label">Atención</div>
-          <div class="avg-bar-track" style="height:16px">
-            <div class="avg-bar-fill-h" style="width:${attnBarPct}%;background:#60a5fa;font-size:9px">
-              ${aA !== null && attnBarPct > 8 ? fmtH(aA) : ''}
-            </div>
-            <div class="avg-bar-sla-line" style="left:${Math.min((p.slaAttn/scale)*100,100)}%">
-              <div class="avg-bar-sla-label">SLA ${fmtH(p.slaAttn)}</div>
-            </div>
-          </div>
-          ${aA !== null && attnBarPct <= 8 ? `<span style="font-size:10px;color:var(--text-secondary)">${fmtH(aA)}</span>` : ''}
-        </div>
-        <div class="avg-bar-group" style="margin-bottom:0">
-          <div class="avg-bar-label">Resolución</div>
-          <div class="avg-bar-track" style="height:16px">
-            <div class="avg-bar-fill-h" style="width:${resBarPct}%;background:${resColor};font-size:9px">
-              ${aR !== null && resBarPct > 12 ? fmtH(aR) : ''}
-            </div>
-            <div class="avg-bar-sla-line" style="left:${slaLinePct}%">
-              <div class="avg-bar-sla-label">SLA ${fmtH(p.slaRes)}</div>
-            </div>
-          </div>
-          ${aR !== null && resBarPct <= 12 ? `<span style="font-size:10px;color:var(--text-secondary)">${fmtH(aR)}</span>` : ''}
-        </div>
-      </div>
+  const scale=active.reduce((m,p)=>Math.max(m,p.slaRes,avg(byP[p.key].res)||0),0);
+  document.getElementById('avgBars').innerHTML=active.map(p=>{
+    const aR=avg(byP[p.key].res), rPct=aR?Math.min(aR/scale*100,100):0, rC=aR?cFor(aR,p.slaRes):'#94a3b8';
+    return `<div style="margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:flex;align-items:center;gap:8px"><span class="avg-prio-badge ${p.cls}" style="font-size:10px;padding:1px 8px">${p.key}</span><span style="color:var(--text-tertiary);font-weight:400">${byP[p.key].total} issues</span></div>
+      <div class="avg-bar-group"><div class="avg-bar-label">Resolución</div><div class="avg-bar-track"><div class="avg-bar-fill-h" style="width:${rPct}%;background:${rC}">${aR&&rPct>12?fH(aR):''}</div><div class="avg-bar-sla-line" style="left:${Math.min(p.slaRes/scale*100,100)}%"><div class="avg-bar-sla-label">SLA ${fH(p.slaRes)}</div></div></div>${aR&&rPct<=12?`<span style="font-size:10px;color:var(--text-secondary)">${fH(aR)}</span>`:''}</div>
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════
-// RENDER TABLE
-// ════════════════════════════════════════════════
-let currentView = 'all';
-let sortKey = 'created';
-let sortDir = -1;
+// ══════════════════════════════════════════
+// TABLE
+// ══════════════════════════════════════════
+let currentView='all', sortKey='created', sortDir=-1;
 
-function setView(v, el) {
-  currentView = v;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderTable();
-}
+function setView(v,el){ currentView=v; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderTable(); }
+function sortBy(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=k==='created'?-1:1;} renderTable(); }
 
-function sortBy(k) {
-  if (sortKey === k) sortDir *= -1;
-  else { sortKey = k; sortDir = k === 'created' ? -1 : 1; }
-  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-  renderTable();
-}
+const fmtH=h=>h===null||h===undefined?'—':h<1?Math.round(h*60)+'min':h<24?h.toFixed(1)+'h':(h/9).toFixed(1)+'d';
+const fmtLimit=h=>h<=8?h+'h':(h/9)+'d';
+const prioClass=p=>({Highest:'b-highest',High:'b-high',Medium:'b-medium',Low:'b-low'}[p]||'b-medium');
+const statusClass=s=>/cerrado|done|closed|resolved/i.test(s)?'b-closed':/esperando|waiting|pending/i.test(s)?'b-wait':'b-open';
+const statusLabel=s=>s==='Esperando la aprobación'?'Esp. aprobación':s;
 
-function fmtH(h) {
-  if (h === null || h === undefined) return '—';
-  if (h < 1) return Math.round(h * 60) + 'min';
-  if (h < 24) return h.toFixed(1) + 'h';
-  return (h / 9).toFixed(1) + 'd';
+function populateStatusFilter(){
+  const statuses=[...new Set(allIssues.map(i=>i.status))].sort();
+  document.getElementById('fStatus').innerHTML='<option value="">Todos los estados</option>'+statuses.map(s=>`<option>${s}</option>`).join('');
 }
-function fmtLimit(h) { return h <= 8 ? h + 'h' : (h / 9) + 'd'; }
-function prioClass(p) { return { Highest:'b-highest', High:'b-high', Medium:'b-medium', Low:'b-low' }[p] || 'b-medium'; }
-function statusClass(s) {
-  if (/cerrado|done|closed|resolved/i.test(s)) return 'b-closed';
-  if (/esperando|waiting|pending/i.test(s)) return 'b-wait';
-  return 'b-open';
-}
-function statusLabel(s) { return s === 'Esperando la aprobación' ? 'Esp. aprobación' : s; }
-
-function populateStatusFilter() {
-  const statuses = [...new Set(allIssues.map(i => i.status))].sort(); // always show all statuses
-  const sel = document.getElementById('fStatus');
-  sel.innerHTML = '<option value="">Todos los estados</option>' +
-    statuses.map(s => `<option>${s}</option>`).join('');
-}
-
-// ── Returns allIssues filtered by the date range pickers ──────────────────────
-function getDateFilteredIssues() {
-  const fFrom = document.getElementById('fDateFrom').value;
-  const fTo   = document.getElementById('fDateTo').value;
-  if (!fFrom && !fTo) return allIssues;
-  const dateFrom = fFrom ? new Date(fFrom + 'T00:00:00') : null;
-  const dateTo   = fTo   ? new Date(fTo   + 'T23:59:59') : null;
-  return allIssues.filter(i => {
-    if (dateFrom && i.created < dateFrom) return false;
-    if (dateTo   && i.created > dateTo)   return false;
+function getFiltered(){
+  const fFrom=document.getElementById('fDateFrom').value, fTo=document.getElementById('fDateTo').value;
+  const dateFrom=fFrom?new Date(fFrom+'T00:00:00'):null, dateTo=fTo?new Date(fTo+'T23:59:59'):null;
+  return allIssues.filter(i=>{
+    if(dateFrom&&i.created<dateFrom) return false;
+    if(dateTo&&i.created>dateTo) return false;
     return true;
   });
 }
+function renderAll(){ renderKPIs(); renderCharts(); renderAverages(); renderTable(); }
+function clearDates(){ document.getElementById('fDateFrom').value=''; document.getElementById('fDateTo').value=''; renderAll(); }
 
-// ── Re-renders everything (KPIs, charts, averages, table) with date filter ────
-function renderAll() {
-  renderKPIs();
-  renderCharts();
-  renderAverages();
-  renderTable();
-}
-
-function clearDates() {
-  document.getElementById('fDateFrom').value = '';
-  document.getElementById('fDateTo').value = '';
-  renderAll();
-}
-
-function renderTable() {
-  if (!allIssues.length) return;
-  const fP  = document.getElementById('fPriority').value;
-  const fS  = document.getElementById('fStatus').value;
-  const fSL = document.getElementById('fSLA').value;
-
-  let filtered = getDateFilteredIssues().filter(i => {
-    if (fP && i.priority !== fP) return false;
-    if (fS && i.status !== fS) return false;
-    if (currentView === 'open'   && i.isClosed) return false;
-    if (currentView === 'breach' && !i.resBreach && !i.attnBreach) return false;
-    if (currentView === 'risk'   && !i.resRisk) return false;
-    if (fSL === 'attn_breach' && i.attnBreach !== true) return false;
-    if (fSL === 'res_breach'  && !i.resBreach) return false;
-    if (fSL === 'res_risk'    && !i.resRisk) return false;
+function renderTable(){
+  if(!allIssues.length) return;
+  const fP=document.getElementById('fPriority').value, fS=document.getElementById('fStatus').value, fSL=document.getElementById('fSLA').value;
+  let filtered=getFiltered().filter(i=>{
+    if(fP&&i.priority!==fP) return false;
+    if(fS&&i.status!==fS) return false;
+    if(currentView==='open'&&i.isClosed) return false;
+    if(currentView==='breach'&&!i.resBreach&&!i.attnBreach) return false;
+    if(currentView==='risk'&&!i.resRisk) return false;
+    if(fSL==='attn_breach'&&i.attnBreach!==true) return false;
+    if(fSL==='res_breach'&&!i.resBreach) return false;
+    if(fSL==='res_risk'&&!i.resRisk) return false;
     return true;
   });
-
-  filtered.sort((a, b) => {
-    let av = a[sortKey], bv = b[sortKey];
-    if (sortKey === 'priority') { av = PRIO_ORDER[a.priority]||99; bv = PRIO_ORDER[b.priority]||99; }
-    if (sortKey === 'key') { av = parseInt(a.key.split('-')[1]); bv = parseInt(b.key.split('-')[1]); }
-    if (av < bv) return -sortDir;
-    if (av > bv) return sortDir;
-    return 0;
+  filtered.sort((a,b)=>{
+    let av=a[sortKey],bv=b[sortKey];
+    if(sortKey==='priority'){av=PRIO_ORDER[a.priority]||99;bv=PRIO_ORDER[b.priority]||99;}
+    if(sortKey==='key'){av=parseInt(a.key.split('-')[1]);bv=parseInt(b.key.split('-')[1]);}
+    return av<bv?-sortDir:av>bv?sortDir:0;
   });
-
-  document.getElementById('countChip').textContent = filtered.length + ' de ' + getDateFilteredIssues().length + ' (' + allIssues.length + ' total)';
-  const fFrom2 = document.getElementById('fDateFrom').value;
-  const fTo2   = document.getElementById('fDateTo').value;
-  const badge  = document.getElementById('dateRangeBadge');
-  const badgeTxt = document.getElementById('dateRangeText');
-  if (fFrom2 || fTo2) {
-    badge.style.display = '';
-    badgeTxt.textContent = (fFrom2 || '…') + ' → ' + (fTo2 || 'hoy');
-  } else {
-    badge.style.display = 'none';
-  }
-
-  document.getElementById('tbody').innerHTML = filtered.length
-    ? filtered.map(i => {
-        const rPct   = Math.min(i.resPct, 100);
-        const barC   = i.resBreach ? '#ef4444' : i.resRisk ? '#f59e0b' : '#22c55e';
-        const createdStr = i.created.toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit'})
-          + ' ' + i.created.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-
-        const attnBadge = i.attnH === null
-          ? `<span class="badge b-nodata">Sin dato</span>`
-          : i.attnBreach
-            ? `<span class="badge b-breach">${fmtH(i.attnH)} Vencido</span>`
-            : `<span class="badge b-ok">${fmtH(i.attnH)} OK</span>`;
-
-        const resBadge = i.isClosed
-          ? `<span class="badge b-closed">Cerrado</span>`
-          : i.resBreach
-            ? `<span class="badge b-breach">Incumplido</span>`
-            : i.resRisk
-              ? `<span class="badge b-risk">En riesgo</span>`
-              : `<span class="badge b-ok">OK</span>`;
-
-        return `<tr>
-          <td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td>
-          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td>
-          <td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td>
-          <td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td>
-          <td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${createdStr}</td>
-          <td>${attnBadge}</td>
-          <td style="color:var(--text-secondary)">${fmtH(i.workH)}</td>
-          <td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td>
-          <td>
-            <div class="sla-wrap">
-              <div class="sla-bg"><div class="sla-fill" style="width:${rPct}%;background:${barC}"></div></div>
-              ${resBadge}
-            </div>
-          </td>
-          <td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.assignee}</td>
-        </tr>`;
-      }).join('')
-    : `<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>`;
+  document.getElementById('countChip').textContent=filtered.length+' de '+allIssues.length;
+  document.getElementById('tbody').innerHTML=filtered.length?filtered.map(i=>{
+    const rPct=Math.min(i.resPct,100), barC=i.resBreach?'#ef4444':i.resRisk?'#f59e0b':'#22c55e';
+    const cStr=i.created.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+i.created.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    const attnB=i.attnH===null?'<span class="badge b-nodata">Sin dato</span>':i.attnBreach?`<span class="badge b-breach">${fmtH(i.attnH)} Vencido</span>`:`<span class="badge b-ok">${fmtH(i.attnH)} OK</span>`;
+    const resB=i.isClosed?'<span class="badge b-closed">Cerrado</span>':i.resBreach?'<span class="badge b-breach">Incumplido</span>':i.resRisk?'<span class="badge b-risk">En riesgo</span>':'<span class="badge b-ok">OK</span>';
+    return `<tr><td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td><td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td><td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td><td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${cStr}</td><td>${attnB}</td><td style="color:var(--text-secondary)">${fmtH(i.workH)}</td><td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td><td><div class="sla-wrap"><div class="sla-bg"><div class="sla-fill" style="width:${rPct}%;background:${barC}"></div></div>${resB}</div></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.assignee}</td></tr>`;
+  }).join(''):'<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>';
 }
 
-// ════════════════════════════════════════════════
-// AUTO-REFRESH CADA 5 MINUTOS
-// ════════════════════════════════════════════════
-function startAutoRefresh() {
-  setInterval(() => { if (cfg.domain && cfg.token) loadData(); }, 5 * 60 * 1000);
-}
-
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
-(function init() {
-  // El login overlay se muestra por defecto.
-  // loadData() se llama desde signInWithGoogle() luego de validar el dominio.
-  // Auto-refresh cada 5 minutos si ya está logueado
-  setInterval(() => { if (googleToken) loadData(); }, 5 * 60 * 1000);
-})();
+// ══════════════════════════════════════════
+// AUTO-REFRESH
+// ══════════════════════════════════════════
+setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
-
-  <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async></script>
-  <script>
-  // ════════════════════════════════════════════════
-  // CONFIGURACIÓN
-  // ════════════════════════════════════════════════
-  const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzJP6iRnmy2Ocf5HY4XuD9ewUXcOGF1wdw603vuTm71psBcVb1OQ5nUXWmKpS5swBtImQ/exec';  // ← URL del doGet desplegado
-  const GOOGLE_CLIENT_ID = '534563550978-3538g7hc2n0qjirnkvec1ngj4fejlrd8.apps.googleusercontent.com';  // ← OAuth Client ID
-  const ALLOWED_DOMAIN   = 'waynimovil.com';
-
-  // ════════════════════════════════════════════════
-  // GOOGLE AUTH
-  // ════════════════════════════════════════════════
-  let googleToken = null;
-
-  function signInWithGoogle() {
-    const btn = document.getElementById('btnGoogle');
-    btn.disabled = true;
-    btn.textContent = 'Conectando...';
-
-    google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: 'email profile',
-      callback: (tokenResponse) => {
-        if (tokenResponse.error) {
-          showLoginError('Error al conectar con Google: ' + tokenResponse.error);
-          btn.disabled = false;
-          btn.innerHTML = '🔄 Reintentar';
-          return;
-        }
-        // Verificar el token y obtener el email
-        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { 'Authorization': 'Bearer ' + tokenResponse.access_token }
-        })
-        .then(r => r.json())
-        .then(user => {
-          const email = user.email || '';
-          if (!email.endsWith('@' + ALLOWED_DOMAIN)) {
-            showLoginError(
-              '⛔ Acceso denegado.\n' +
-              'Tu cuenta (' + email + ') no pertenece a @' + ALLOWED_DOMAIN + '.\n' +
-              'Iniciá sesión con tu cuenta corporativa.'
-            );
-            btn.disabled = false;
-            btn.innerHTML = '🔄 Reintentar con otra cuenta';
-            return;
-          }
-          // ✅ Dominio válido — guardar token y cargar el tablero
-          googleToken = tokenResponse.access_token;
-          document.getElementById('loginOverlay').style.display = 'none';
-          document.getElementById('userBadge').textContent = user.name || email;
-          document.getElementById('userBadge').style.display = 'inline-block';
-          loadData();
-        })
-        .catch(err => {
-          showLoginError('Error al verificar cuenta: ' + err.message);
-          btn.disabled = false;
-          btn.textContent = '🔄 Reintentar';
-        });
-      }
-    }).requestAccessToken();
-  }
-
-  function showLoginError(msg) {
-    const el = document.getElementById('loginError');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  // ════════════════════════════════════════════════
-  // loadData — fetch con token Google incluido
-  // ════════════════════════════════════════════════
-  async function loadData() {
-    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PEGAR')) {
-      document.getElementById('statusBar').style.display = 'block';
-      document.getElementById('statusBar').textContent =
-        '⚙️ Falta configurar APPS_SCRIPT_URL y GOOGLE_CLIENT_ID en el HTML.';
-      return;
-    }
-
-    showError('');
-    setLoading(true, 'Conectando con Google Sheets...');
-
-    try {
-      setLoading(true, 'Trayendo datos actualizados...');
-
-      // El Apps Script (doGet) valida el usuario en el servidor vía Session.getActiveUser().
-      // El fetch con credentials: 'include' envía la cookie de sesión de Google.
-      const url = APPS_SCRIPT_URL + '?token=' + encodeURIComponent(googleToken);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      const data = await res.json();
-      if (data.error) throw new Error(data.error + (data.message ? ': ' + data.message : ''));
-      if (!data.issues || !data.issues.length) throw new Error('El sheet no tiene issues. Ejecutá syncToSheet() en Apps Script.');
-
-      setLoading(true, 'Calculando SLAs...');
-      const now = new Date();
-      allIssues = data.issues.map(i => processIssue(i, now));
-
-      populateStatusFilter();
-      renderKPIs();
-      renderCharts();
-      renderAverages();
-      renderTable();
-
-      const updStr = data.updated
-        ? new Date(data.updated).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})
-        : '—';
-      document.getElementById('lastUpdate').textContent = 'Datos: ' + updStr;
-      document.getElementById('headerSub').textContent = (data.project||'WT') + ' · etiqueta: ' + (data.label||'soporte');
-
-    } catch(e) {
-      showError('❌ ' + e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-  </script>
-
 </body>
 </html>
+
