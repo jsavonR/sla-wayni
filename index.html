@@ -259,7 +259,7 @@
 // ══════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════
-const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycby95uOA9W1rDJXhc3FMkJDI0-xDKf8jKZAPCCybDA_ez6i4Av1QNOPRC5wwa8vRo8JumQ/exec';
+const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzJP6iRnmy2Ocf5HY4XuD9ewUXcOGF1wdw603vuTm71psBcVb1OQ5nUXWmKpS5swBtImQ/exec';
 const GOOGLE_CLIENT_ID = '534563550978-3538g7hc2n0qjirnkvec1ngj4fejlrd8.apps.googleusercontent.com';
 const ALLOWED_DOMAIN   = 'waynimovil.com';
 
@@ -360,7 +360,7 @@ async function loadData() {
   if (!googleToken) return;
   showError(''); setLoading(true,'Trayendo datos del sheet...');
   try {
-    const res = await fetch(APPS_SCRIPT_URL+'?token='+encodeURIComponent(googleToken));
+    const res = await fetch(APPS_SCRIPT_URL+'?token='+encodeURIComponent(googleToken), { redirect: 'follow' });
     if (!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     if (data.error) throw new Error(data.error+(data.message?': '+data.message:''));
@@ -562,4 +562,5 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
 
