@@ -364,21 +364,21 @@ async function loadData() {
     const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRckNwIDcsKsUsOekgfPEyNM58mXeEAyusjmUPvM2WRu4qJTali3eN1z57bh8VNhAzIYBzLaBGZ4LBa/pub?gid=519641211&single=true&output=csv');
     if (!res.ok) throw new Error('HTTP '+res.status);
     const text = await res.text();
-    const rows = text.trim().split('\n');
+    // Parsear CSV: separar por líneas, manejar \r\n y comillas dobles de CSV
+    const rows = text.replace(/\r/g, '').trim().split('\n');
 
-    // Fila 1: timestamp, total
-    const meta = rows[0].split(',');
-    const updated = meta[0] ? meta[0].replace(/"/g,'').trim() : null;
+    // Fila 1: timestamp
+    const updated = rows[0] ? rows[0].split(',')[0].replace(/"/g,'').trim() : null;
 
-    // Filas 2+: JSON de cada issue
+    // Filas 2+: cada celda es un JSON con comillas duplicadas (formato CSV estándar)
     const issues = [];
     for (let i = 1; i < rows.length; i++) {
-      const cell = rows[i].trim();
+      let cell = rows[i].trim();
       if (!cell) continue;
-      // El CSV puede envolver en comillas y duplicar comillas internas
-      let json = cell;
-      if (json.startsWith('"')) json = json.slice(1, -1).replace(/""/g, '"');
-      try { issues.push(JSON.parse(json)); } catch(e) { /* fila inválida */ }
+      // Quitar comilla inicial y final, reemplazar dobles comillas por simples
+      if (cell.charAt(0) === '"') cell = cell.slice(1, -1);
+      cell = cell.replace(/""/g, '"');
+      try { issues.push(JSON.parse(cell)); } catch(e) { /* fila inválida */ }
     }
 
     if (!issues.length) throw new Error('Sin datos. Ejecutá syncToSheet() en Apps Script.');
@@ -582,3 +582,4 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
