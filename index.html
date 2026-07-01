@@ -358,13 +358,15 @@ function showError(msg){
 
 async function loadData() {
   if (!googleToken) return;
-  showError(''); setLoading(true,'Trayendo datos del sheet...');
+  showError(''); setLoading(true,'Trayendo datos actualizados...');
   try {
-    const res = await fetch(APPS_SCRIPT_URL+'?token='+encodeURIComponent(googleToken), { redirect: 'follow' });
+    // Lee el JSON publicado en Google Drive (sin CORS)
+    const DRIVE_URL = 'https://drive.google.com/uc?export=download&id=11TiTOgNsSxGG9lDOrSMGCzJKgctyaAlh';
+    const res = await fetch(DRIVE_URL);
     if (!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     if (data.error) throw new Error(data.error+(data.message?': '+data.message:''));
-    if (!data.issues||!data.issues.length) throw new Error('Sin datos en el sheet. Ejecutá syncToSheet() en Apps Script.');
+    if (!data.issues||!data.issues.length) throw new Error('Sin datos. Ejecutá syncToSheet() en Apps Script.');
     setLoading(true,'Calculando SLAs...');
     const now=new Date();
     allIssues=data.issues.map(i=>processIssue(i,now));
@@ -562,5 +564,6 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
 
 
