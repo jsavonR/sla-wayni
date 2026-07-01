@@ -364,21 +364,52 @@ async function loadData() {
     const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRckNwIDcsKsUsOekgfPEyNM58mXeEAyusjmUPvM2WRu4qJTali3eN1z57bh8VNhAzIYBzLaBGZ4LBa/pub?gid=519641211&single=true&output=csv');
     if (!res.ok) throw new Error('HTTP '+res.status);
     const text = await res.text();
-    // Parsear CSV: separar por líneas, manejar \r\n y comillas dobles de CSV
-    const rows = text.replace(/\r/g, '').trim().split('\n');
+    // Parser CSV que respeta comillas con saltos de línea internos
+    function parseCSVCells(text) {
+      const cells = [];
+      let i = 0;
+      while (i < text.length) {
+        if (text[i] === '"') {
+          // Celda entre comillas — buscar el cierre respetando "" como escape
+          let cell = '';
+          i++; // saltar comilla inicial
+          while (i < text.length) {
+            if (text[i] === '"' && text[i+1] === '"') {
+              cell += '"'; i += 2;
+            } else if (text[i] === '"') {
+              i++; break; // fin de celda
+            } else {
+              cell += text[i++];
+            }
+          }
+          cells.push(cell);
+          // saltar separador (coma o \n)
+          if (text[i] === ',' || text[i] === '\n') i++;
+        } else {
+          // Celda sin comillas — leer hasta coma o \n
+          let start = i;
+          while (i < text.length && text[i] !== ',' && text[i] !== '\n') i++;
+          cells.push(text.slice(start, i));
+          if (text[i] === ',' || text[i] === '\n') i++;
+        }
+      }
+      return cells;
+    }
 
-    // Fila 1: timestamp
-    const updated = rows[0] ? rows[0].split(',')[0].replace(/"/g,'').trim() : null;
+    const normalized = text.replace(/\r/g, '');
+    const cells = parseCSVCells(normalized);
 
-    // Filas 2+: cada celda es un JSON con comillas duplicadas (formato CSV estándar)
+    // Celda 0: timestamp (fila 1, col 1)
+    const updated = cells[0] ? cells[0].trim() : null;
+
+    // Celdas 2+ (índice 2 en adelante, saltando col 2 de fila 1): cada una es un issue JSON
+    // Fila 1 tiene 2 columnas (timestamp, count), luego fila 2+ tiene 1 columna cada una
     const issues = [];
-    for (let i = 1; i < rows.length; i++) {
-      let cell = rows[i].trim();
+    // Saltamos las primeras 2 celdas (timestamp y count de la fila de metadata)
+    for (let i = 2; i < cells.length; i++) {
+      const cell = cells[i].trim();
       if (!cell) continue;
-      // Quitar comilla inicial y final, reemplazar dobles comillas por simples
-      if (cell.charAt(0) === '"') cell = cell.slice(1, -1);
-      cell = cell.replace(/""/g, '"');
-      try { issues.push(JSON.parse(cell)); } catch(e) { /* fila inválida */ }
+      try { issues.push(JSON.parse(cell)); } catch(e) { /* celda inválida */ }
     }
 
     if (!issues.length) throw new Error('Sin datos. Ejecutá syncToSheet() en Apps Script.');
@@ -582,4 +613,3 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
-
