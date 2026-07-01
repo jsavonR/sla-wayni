@@ -360,22 +360,40 @@ async function loadData() {
   if (!googleToken) return;
   showError(''); setLoading(true,'Trayendo datos actualizados...');
   try {
-    // Lee el JSON publicado en Google Drive (sin CORS)
-    const DRIVE_URL = 'https://drive.google.com/uc?export=download&id=11TiTOgNsSxGG9lDOrSMGCzJKgctyaAlh';
-    const res = await fetch(DRIVE_URL);
+    // Lee el CSV publicado desde Google Sheets (sin CORS)
+    const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRckNwIDcsKsUsOekgfPEyNM58mXeEAyusjmUPvM2WRu4qJTali3eN1z57bh8VNhAzIYBzLaBGZ4LBa/pub?gid=519641211&single=true&output=csv');
     if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error+(data.message?': '+data.message:''));
-    if (!data.issues||!data.issues.length) throw new Error('Sin datos. Ejecutá syncToSheet() en Apps Script.');
+    const text = await res.text();
+    const rows = text.trim().split('\n');
+
+    // Fila 1: timestamp, total
+    const meta = rows[0].split(',');
+    const updated = meta[0] ? meta[0].replace(/"/g,'').trim() : null;
+
+    // Filas 2+: JSON de cada issue
+    const issues = [];
+    for (let i = 1; i < rows.length; i++) {
+      const cell = rows[i].trim();
+      if (!cell) continue;
+      // El CSV puede envolver en comillas y duplicar comillas internas
+      let json = cell;
+      if (json.startsWith('"')) json = json.slice(1, -1).replace(/""/g, '"');
+      try { issues.push(JSON.parse(json)); } catch(e) { /* fila inválida */ }
+    }
+
+    if (!issues.length) throw new Error('Sin datos. Ejecutá syncToSheet() en Apps Script.');
     setLoading(true,'Calculando SLAs...');
-    const now=new Date();
-    allIssues=data.issues.map(i=>processIssue(i,now));
+    const now = new Date();
+    allIssues = issues.map(i => processIssue(i, now));
     populateStatusFilter(); renderKPIs(); renderCharts(); renderAverages(); renderTable();
-    const upd=data.updated?new Date(data.updated).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-    document.getElementById('lastUpdate').textContent='Datos: '+upd;
-    document.getElementById('headerSub').textContent=(data.project||'WT')+' · etiqueta: '+(data.label||'soporte');
+
+    const upd = updated
+      ? new Date(updated).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    document.getElementById('lastUpdate').textContent = 'Datos: ' + upd;
+    document.getElementById('headerSub').textContent = 'WT · etiqueta: soporte';
   } catch(e) {
-    showError('❌ '+e.message);
+    showError('❌ ' + e.message);
   } finally { setLoading(false); }
 }
 
@@ -564,6 +582,3 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
-
-
-
