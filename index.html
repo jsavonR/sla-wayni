@@ -293,7 +293,7 @@
       <label class="filter-label"><span>Desde</span><input type="date" id="pDateFrom" onchange="renderPanelIT()"/></label>
       <label class="filter-label"><span>Hasta</span><input type="date" id="pDateTo" onchange="renderPanelIT()"/></label>
       <button class="btn-clear" onclick="clearPanelDates()">✕ Fechas</button>
-      <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">"Por prioridad" / "Por tipo" filtran por fecha de creación · "Cerrados..." filtran por fecha de resolución</span>
+      <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">"Por prioridad" / "Por tipo" filtran por fecha de creación · "Cerrados..." filtran por fecha de resolución (o última actualización si Jira no la tiene cargada)</span>
     </div>
 
     <div class="panelit-grid">
@@ -523,15 +523,19 @@ function processIssue(i,now){
   const status=(f.status||{}).name||'';
   const issueType=(f.issuetype||{}).name||'Otro';
   const resolutionDate=f.resolutiondate?new Date(f.resolutiondate):null;
+  const updatedDate=f.updated?new Date(f.updated):null;
   const slaResH=SLA_RES[priority]||120;
   const workH=workHoursBetween(created,now);
   const resPct=Math.round(workH/slaResH*100);
   const isClosed=/cerrado|done|closed|resolved/i.test(status);
   const resBreach=!isClosed&&workH>slaResH;
   const resRisk=!isClosed&&!resBreach&&resPct>=75;
+  // resolutiondate suele venir null en este proyecto (el workflow no setea Resolution al cerrar),
+  // así que usamos 'updated' como aproximación de la fecha de cierre cuando falta resolutiondate.
+  const closureDate=resolutionDate||updatedDate;
   return {
     key:i.key, summary:f.summary||'', status, priority, issueType,
-    created, resolutionDate, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
+    created, resolutionDate, updatedDate, closureDate, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
     assignee:(f.assignee||{}).displayName||'Sin asignar',
     issueUrl:'https://waynimovil.atlassian.net/browse/'+i.key,
   };
@@ -707,15 +711,16 @@ function getPanelFiltered(){
 }
 function clearPanelDates(){ document.getElementById('pDateFrom').value=''; document.getElementById('pDateTo').value=''; renderPanelIT(); }
 
-// Issues cerrados filtrados por fecha de RESOLUCIÓN (no de creación)
+// Issues cerrados filtrados por fecha de RESOLUCIÓN (o, si no está cargada en Jira, por
+// la fecha de última actualización — que en la práctica es cuando pasó a Cerrado)
 function getPanelClosedByResolution(){
   const fFrom=document.getElementById('pDateFrom').value, fTo=document.getElementById('pDateTo').value;
   const dateFrom=fFrom?new Date(fFrom+'T00:00:00'):null, dateTo=fTo?new Date(fTo+'T23:59:59'):null;
   return allIssues.filter(i=>{
     if(!i.isClosed) return false;
-    if(!i.resolutionDate) return false; // sin fecha de resolución, no se puede ubicar en el rango
-    if(dateFrom&&i.resolutionDate<dateFrom) return false;
-    if(dateTo&&i.resolutionDate>dateTo) return false;
+    if(!i.closureDate) return false; // sin fecha de cierre ni actualización, no se puede ubicar en el rango
+    if(dateFrom&&i.closureDate<dateFrom) return false;
+    if(dateTo&&i.closureDate>dateTo) return false;
     return true;
   });
 }
@@ -804,4 +809,3 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
-
