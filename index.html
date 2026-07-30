@@ -40,6 +40,13 @@
   .btn-refresh{display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer}
   .btn-refresh.loading svg{animation:spin .8s linear infinite}
 
+  /* NAV TABS (solapas principales) */
+  .main-tabs{display:flex;gap:4px;padding:0 1.5rem;background:var(--surface);border-bottom:1px solid var(--border)}
+  .main-tab-btn{font-size:12px;font-weight:600;padding:10px 14px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;font-family:var(--font)}
+  .main-tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .main-view{display:none}
+  .main-view.active{display:block}
+
   /* MAIN */
   main{padding:1.25rem 1.5rem;max-width:1400px;margin:0 auto}
   #statusBar{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;display:none}
@@ -133,8 +140,22 @@
   .key-link:hover{text-decoration:underline}
   .footnote{font-size:10px;color:var(--text-tertiary);padding:.75rem 1rem;border-top:1px solid var(--border);line-height:1.6;background:var(--surface2)}
 
-  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.avg-card{border-right:none;border-bottom:1px solid var(--border)}}
-  @media(max-width:600px){header{padding:0 1rem}main{padding:1rem}}
+  /* PANEL IT (nueva solapa) */
+  .panelit-filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:.85rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .panelit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .panelit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem;grid-column:span 1}
+  .panelit-card.wide{grid-column:span 1}
+  .panelit-ttl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);margin-bottom:10px}
+  .panelit-total{font-size:11px;color:var(--text-secondary);margin-top:8px}
+  .panelit-total b{color:var(--text)}
+  .panelit-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+  .panelit-table td{padding:4px 6px;border-bottom:1px solid var(--border)}
+  .panelit-table tr:last-child td{border-bottom:none;font-weight:600}
+  .panelit-dot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:6px;flex-shrink:0}
+  .panelit-empty{color:var(--text-tertiary);text-align:center;padding:1.5rem 0;font-size:12px}
+
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.avg-card{border-right:none;border-bottom:1px solid var(--border)}.panelit-grid{grid-template-columns:1fr}}
+  @media(max-width:600px){header{padding:0 1rem}main{padding:1rem}.main-tabs{padding:0 1rem}}
 </style>
 </head>
 <body>
@@ -179,9 +200,18 @@
   </div>
 </header>
 
+<!-- SOLAPAS PRINCIPALES -->
+<div class="main-tabs">
+  <button class="main-tab-btn active" id="mainTabSLA" onclick="setMainView('sla')">SLA Dashboard</button>
+  <button class="main-tab-btn" id="mainTabPanelIT" onclick="setMainView('panelit')">Panel IT</button>
+</div>
+
 <main>
   <div id="statusBar"></div>
   <div id="loadingBar"><div class="spinner"></div><span id="loadingMsg">Cargando...</span></div>
+
+  <!-- ═══════════ VISTA: SLA DASHBOARD ═══════════ -->
+  <div class="main-view active" id="viewSLA">
 
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card"><div class="kpi-label">Total issues</div><div class="kpi-value" style="color:var(--text-secondary)">—</div></div>
@@ -252,6 +282,46 @@
       SLA resolución — Highest: 4h · High: 40h (5 días) · Medium: 120h (15 días) · Low: 160h (20 días).
     </div>
   </div>
+
+  </div>
+  <!-- ═══════════ FIN VISTA SLA ═══════════ -->
+
+  <!-- ═══════════ VISTA: PANEL IT (nueva solapa) ═══════════ -->
+  <div class="main-view" id="viewPanelIT">
+
+    <div class="panelit-filters">
+      <label class="filter-label"><span>Desde</span><input type="date" id="pDateFrom" onchange="renderPanelIT()"/></label>
+      <label class="filter-label"><span>Hasta</span><input type="date" id="pDateTo" onchange="renderPanelIT()"/></label>
+      <button class="btn-clear" onclick="clearPanelDates()">✕ Fechas</button>
+      <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">"Por prioridad" / "Por tipo" filtran por fecha de creación · "Cerrados..." filtran por fecha de resolución</span>
+    </div>
+
+    <div class="panelit-grid">
+      <div class="panelit-card">
+        <div class="panelit-ttl">Por prioridad</div>
+        <div style="position:relative;height:180px"><canvas id="chartPrio"></canvas></div>
+        <table class="panelit-table" id="tblPrio"></table>
+      </div>
+      <div class="panelit-card">
+        <div class="panelit-ttl">Cerrados por prioridad</div>
+        <div style="position:relative;height:180px"><canvas id="chartPrioClosed"></canvas></div>
+        <table class="panelit-table" id="tblPrioClosed"></table>
+      </div>
+      <div class="panelit-card">
+        <div class="panelit-ttl">Por tipo</div>
+        <div style="position:relative;height:180px"><canvas id="chartTipo"></canvas></div>
+        <table class="panelit-table" id="tblTipo"></table>
+      </div>
+      <div class="panelit-card">
+        <div class="panelit-ttl">Cerrado por tipo</div>
+        <div style="position:relative;height:180px"><canvas id="chartTipoClosed"></canvas></div>
+        <table class="panelit-table" id="tblTipoClosed"></table>
+      </div>
+    </div>
+
+  </div>
+  <!-- ═══════════ FIN VISTA PANEL IT ═══════════ -->
+
 </main>
 
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -295,6 +365,17 @@ function workHoursBetween(from, to) {
     cur=new Date(cur); cur.setDate(cur.getDate()+1); cur.setHours(WORK_START,0,0,0);
   }
   return total;
+}
+
+// ══════════════════════════════════════════
+// SOLAPAS PRINCIPALES
+// ══════════════════════════════════════════
+function setMainView(v){
+  document.getElementById('viewSLA').classList.toggle('active', v==='sla');
+  document.getElementById('viewPanelIT').classList.toggle('active', v==='panelit');
+  document.getElementById('mainTabSLA').classList.toggle('active', v==='sla');
+  document.getElementById('mainTabPanelIT').classList.toggle('active', v==='panelit');
+  if (v==='panelit') renderPanelIT();
 }
 
 // ══════════════════════════════════════════
@@ -417,6 +498,7 @@ async function loadData() {
     const now = new Date();
     allIssues = issues.map(i => processIssue(i, now));
     populateStatusFilter(); renderKPIs(); renderCharts(); renderAverages(); renderTable();
+    if (document.getElementById('viewPanelIT').classList.contains('active')) renderPanelIT();
 
     const upd = updated
       ? new Date(updated).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})
@@ -439,6 +521,8 @@ function processIssue(i,now){
   const attnBreach=attnH!==null?attnH>SLA_ATTN:null;
   const priority=(f.priority||{}).name||'Medium';
   const status=(f.status||{}).name||'';
+  const issueType=(f.issuetype||{}).name||'Otro';
+  const resolutionDate=f.resolutiondate?new Date(f.resolutiondate):null;
   const slaResH=SLA_RES[priority]||120;
   const workH=workHoursBetween(created,now);
   const resPct=Math.round(workH/slaResH*100);
@@ -446,8 +530,8 @@ function processIssue(i,now){
   const resBreach=!isClosed&&workH>slaResH;
   const resRisk=!isClosed&&!resBreach&&resPct>=75;
   return {
-    key:i.key, summary:f.summary||'', status, priority,
-    created, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
+    key:i.key, summary:f.summary||'', status, priority, issueType,
+    created, resolutionDate, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
     assignee:(f.assignee||{}).displayName||'Sin asignar',
     issueUrl:'https://waynimovil.atlassian.net/browse/'+i.key,
   };
@@ -607,9 +691,117 @@ function renderTable(){
 }
 
 // ══════════════════════════════════════════
+// PANEL IT (nueva solapa) — gráficos por prioridad y por tipo
+// ══════════════════════════════════════════
+const PRIO_COLORS = { Highest:'#dc2626', High:'#dc2626', Medium:'#f59e0b', Low:'#3b82f6' };
+const TIPO_COLORS_POOL = ['#f59e0b','#dc2626','#10b981','#3b82f6','#8b5cf6','#94a3b8'];
+
+function getPanelFiltered(){
+  const fFrom=document.getElementById('pDateFrom').value, fTo=document.getElementById('pDateTo').value;
+  const dateFrom=fFrom?new Date(fFrom+'T00:00:00'):null, dateTo=fTo?new Date(fTo+'T23:59:59'):null;
+  return allIssues.filter(i=>{
+    if(dateFrom&&i.created<dateFrom) return false;
+    if(dateTo&&i.created>dateTo) return false;
+    return true;
+  });
+}
+function clearPanelDates(){ document.getElementById('pDateFrom').value=''; document.getElementById('pDateTo').value=''; renderPanelIT(); }
+
+// Issues cerrados filtrados por fecha de RESOLUCIÓN (no de creación)
+function getPanelClosedByResolution(){
+  const fFrom=document.getElementById('pDateFrom').value, fTo=document.getElementById('pDateTo').value;
+  const dateFrom=fFrom?new Date(fFrom+'T00:00:00'):null, dateTo=fTo?new Date(fTo+'T23:59:59'):null;
+  return allIssues.filter(i=>{
+    if(!i.isClosed) return false;
+    if(!i.resolutionDate) return false; // sin fecha de resolución, no se puede ubicar en el rango
+    if(dateFrom&&i.resolutionDate<dateFrom) return false;
+    if(dateTo&&i.resolutionDate>dateTo) return false;
+    return true;
+  });
+}
+
+function countBy(issues, keyFn){
+  const map={};
+  issues.forEach(i=>{ const k=keyFn(i)||'Otro'; map[k]=(map[k]||0)+1; });
+  return map;
+}
+
+function renderBarChart(id, tableId, counts, colorFn, totalLabel){
+  destroyChart(id);
+  const labels=Object.keys(counts);
+  const canvas=document.getElementById(id);
+  const tbl=document.getElementById(tableId);
+  if(!labels.length){
+    canvas.style.display='none';
+    tbl.innerHTML='<tr><td class="panelit-empty">Sin datos para el rango seleccionado</td></tr>';
+    return;
+  }
+  canvas.style.display='';
+  const data=labels.map(l=>counts[l]);
+  const colors=labels.map(l=>colorFn(l));
+  const total=data.reduce((a,b)=>a+b,0);
+  charts[id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:60}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' issues'}}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}
+  });
+  tbl.innerHTML = labels.map((l,idx)=>`<tr><td><span class="panelit-dot" style="background:${colors[idx]}"></span>${l}</td><td style="text-align:right">${data[idx]}</td></tr>`).join('')
+    + `<tr><td>Total</td><td style="text-align:right">${total}</td></tr>`;
+}
+
+function renderDonutChart(id, tableId, counts, colorFn){
+  destroyChart(id);
+  const labels=Object.keys(counts);
+  const canvas=document.getElementById(id);
+  const tbl=document.getElementById(tableId);
+  if(!labels.length){
+    canvas.style.display='none';
+    tbl.innerHTML='<tr><td class="panelit-empty">Sin datos para el rango seleccionado</td></tr>';
+    return;
+  }
+  canvas.style.display='';
+  const data=labels.map(l=>counts[l]);
+  const colors=labels.map(l=>colorFn(l));
+  const total=data.reduce((a,b)=>a+b,0);
+  charts[id]=new Chart(canvas,{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+  tbl.innerHTML = labels.map((l,idx)=>`<tr><td><span class="panelit-dot" style="background:${colors[idx]}"></span>${l}</td><td style="text-align:right">${data[idx]}</td><td style="text-align:right;color:var(--text-tertiary)">${total?Math.round(data[idx]/total*1000)/10:0}%</td></tr>`).join('')
+    + `<tr><td>Total</td><td style="text-align:right">${total}</td><td style="text-align:right">100%</td></tr>`;
+}
+
+// asigna colores estables a los tipos de incidencia (por orden de aparición)
+function tipoColorMap(labels){
+  const map={};
+  labels.forEach((l,i)=>{ map[l]=TIPO_COLORS_POOL[i%TIPO_COLORS_POOL.length]; });
+  return map;
+}
+
+function renderPanelIT(){
+  if(!allIssues.length) return;
+  const issues=getPanelFiltered(); // "Por prioridad" / "Por tipo" -> filtrados por fecha de creación
+  const closedIssues=getPanelClosedByResolution(); // "Cerrados..." -> filtrados por fecha de resolución
+
+  // Por prioridad (todos) y Cerrados por prioridad
+  renderBarChart('chartPrio','tblPrio', countBy(issues, i=>i.priority), p=>PRIO_COLORS[p]||'#94a3b8');
+  renderBarChart('chartPrioClosed','tblPrioClosed', countBy(closedIssues, i=>i.priority), p=>PRIO_COLORS[p]||'#94a3b8');
+
+  // Por tipo (todos) y Cerrado por tipo — mismo mapa de colores para ambos gráficos
+  const tipoCountsAll=countBy(issues, i=>i.issueType);
+  const tipoCountsClosed=countBy(closedIssues, i=>i.issueType);
+  const allTipoLabels=[...new Set([...Object.keys(tipoCountsAll),...Object.keys(tipoCountsClosed)])];
+  const cmap=tipoColorMap(allTipoLabels);
+  renderDonutChart('chartTipo','tblTipo', tipoCountsAll, t=>cmap[t]||'#94a3b8');
+  renderDonutChart('chartTipoClosed','tblTipoClosed', tipoCountsClosed, t=>cmap[t]||'#94a3b8');
+}
+
+// ══════════════════════════════════════════
 // AUTO-REFRESH
 // ══════════════════════════════════════════
 setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
