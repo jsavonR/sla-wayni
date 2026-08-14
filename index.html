@@ -662,8 +662,8 @@ function setView(v,el){ currentView=v; document.querySelectorAll('.tab-btn').for
 function sortBy(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=k==='created'?-1:1;} renderTable(); }
 
 const fmtH=h=>h===null||h===undefined?'—':h<1?Math.round(h*60)+'min':h<24?h.toFixed(1)+'h':(h/9).toFixed(1)+'d';
-// Límite de resolución redondeado (antes: (h/9) sin redondear, ej. 40h -> 4.44d)
-const fmtLimit=h=>h<=8?h+'h':Math.round(h/9)+'d';
+// Límite de resolución siempre en horas hábiles (redondeado)
+const fmtLimit=h=>Math.round(h)+'h';
 const prioClass=p=>({Highest:'b-highest',High:'b-high',Medium:'b-medium',Low:'b-low'}[p]||'b-medium');
 const statusClass=s=>/cerrado|done|closed|resolved/i.test(s)?'b-closed':/esperando|waiting|pending/i.test(s)?'b-wait':'b-open';
 const statusLabel=s=>s==='Esperando la aprobación'?'Esp. aprobación':s;
@@ -841,4 +841,5 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
 
