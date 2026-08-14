@@ -139,6 +139,7 @@
   .key-link{color:var(--blue);font-weight:600;text-decoration:none;font-size:11px;font-family:var(--font-mono)}
   .key-link:hover{text-decoration:underline}
   .footnote{font-size:10px;color:var(--text-tertiary);padding:.75rem 1rem;border-top:1px solid var(--border);line-height:1.6;background:var(--surface2)}
+  .src-tag{font-size:9px;color:var(--text-tertiary);font-weight:400;margin-left:4px}
 
   /* PANEL IT (nueva solapa) */
   .panelit-filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:.85rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
@@ -255,6 +256,8 @@
       <select id="fPriority" onchange="renderTable()"><option value="">Todas las prioridades</option><option>Highest</option><option>High</option><option>Medium</option><option>Low</option></select>
       <select id="fStatus" onchange="renderTable()"><option value="">Todos los estados</option></select>
       <select id="fSLA" onchange="renderTable()"><option value="">Ambos SLA</option><option value="attn_breach">Atención vencida</option><option value="res_breach">Resolución incumplida</option><option value="res_risk">En riesgo</option></select>
+      <select id="fStakeholder" onchange="renderTable()"><option value="">Todas las partes interesadas</option></select>
+      <select id="fAssignee" onchange="renderTable()"><option value="">Todos los asignados</option></select>
       <label class="filter-label"><span>Desde</span><input type="date" id="fDateFrom" onchange="renderAll()"/></label>
       <label class="filter-label"><span>Hasta</span><input type="date" id="fDateTo" onchange="renderAll()"/></label>
       <button class="btn-clear" onclick="clearDates()">✕ Fechas</button>
@@ -271,15 +274,18 @@
           <th onclick="sortBy('workH')">Tiempo hábil<span class="sa">↕</span></th>
           <th>Límite res.</th>
           <th onclick="sortBy('resPct')">SLA resolución<span class="sa">↕</span></th>
-          <th>Asignado</th>
+          <th onclick="sortBy('stakeholder')">Partes interesadas<span class="sa">↕</span></th>
+          <th onclick="sortBy('assigneeDisplay')">Asignado<span class="sa">↕</span></th>
         </tr></thead>
-        <tbody id="tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Iniciá sesión para ver los datos</td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--text-tertiary)">Iniciá sesión para ver los datos</td></tr></tbody>
       </table>
     </div>
     <div class="footnote">
       Horas hábiles: lun–vie 9–18 hs · Feriados Argentina 2026 excluidos.<br>
       SLA atención: 1h hábil desde creación hasta primer comentario del agente.<br>
-      SLA resolución — Highest: 4h · High: 40h (5 días) · Medium: 120h (15 días) · Low: 160h (20 días).
+      SLA resolución — Highest: 4h · High: 40h (5 días) · Medium: 120h (15 días) · Low: 160h (20 días).<br>
+      Partes interesadas: informador (reporter) del ticket.<br>
+      Asignado: si el ticket tiene un ticket vinculado en el proyecto STI, se muestra el asignado de ese ticket STI; si no, se muestra el asignado del propio ticket WT.
     </div>
   </div>
 
@@ -497,7 +503,7 @@ async function loadData() {
     setLoading(true,'Calculando SLAs...');
     const now = new Date();
     allIssues = issues.map(i => processIssue(i, now));
-    populateStatusFilter(); renderKPIs(); renderCharts(); renderAverages(); renderTable();
+    populateFilters(); renderKPIs(); renderCharts(); renderAverages(); renderTable();
     if (document.getElementById('viewPanelIT').classList.contains('active')) renderPanelIT();
 
     const upd = updated
@@ -530,13 +536,26 @@ function processIssue(i,now){
   const isClosed=/cerrado|done|closed|resolved/i.test(status);
   const resBreach=!isClosed&&workH>slaResH;
   const resRisk=!isClosed&&!resBreach&&resPct>=75;
+
+  // Partes interesadas = informador (reporter) del ticket
+  const stakeholder=(f.reporter||{}).displayName||'Sin dato';
+
+  // Asignado: si el ticket tiene un vinculado en STI, usar el asignado de ese ticket STI
+  // (el Apps Script ya resuelve esto y lo guarda en el campo auxiliar _stiAssignee).
+  // Si no hay vínculo STI o el Apps Script no lo trae, cae al asignado propio del ticket WT.
+  const wtAssignee=(f.assignee||{}).displayName||'Sin asignar';
+  const stiAssignee=f._stiAssignee||null;
+  const stiKey=f._stiKey||null;
+  const assigneeDisplay=stiAssignee||wtAssignee;
+  const assigneeSource=stiAssignee?'STI':'WT';
+
   // resolutiondate suele venir null en este proyecto (el workflow no setea Resolution al cerrar),
   // así que usamos 'updated' como aproximación de la fecha de cierre cuando falta resolutiondate.
   const closureDate=resolutionDate||updatedDate;
   return {
     key:i.key, summary:f.summary||'', status, priority, issueType,
     created, resolutionDate, updatedDate, closureDate, attnH, attnBreach, workH, slaResH, resPct, resBreach, resRisk, isClosed,
-    assignee:(f.assignee||{}).displayName||'Sin asignar',
+    stakeholder, assigneeDisplay, assigneeSource, stiKey, wtAssignee,
     issueUrl:'https://waynimovil.atlassian.net/browse/'+i.key,
   };
 }
@@ -643,14 +662,21 @@ function setView(v,el){ currentView=v; document.querySelectorAll('.tab-btn').for
 function sortBy(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=k==='created'?-1:1;} renderTable(); }
 
 const fmtH=h=>h===null||h===undefined?'—':h<1?Math.round(h*60)+'min':h<24?h.toFixed(1)+'h':(h/9).toFixed(1)+'d';
-const fmtLimit=h=>h<=8?h+'h':(h/9)+'d';
+// Límite de resolución redondeado (antes: (h/9) sin redondear, ej. 40h -> 4.44d)
+const fmtLimit=h=>h<=8?h+'h':Math.round(h/9)+'d';
 const prioClass=p=>({Highest:'b-highest',High:'b-high',Medium:'b-medium',Low:'b-low'}[p]||'b-medium');
 const statusClass=s=>/cerrado|done|closed|resolved/i.test(s)?'b-closed':/esperando|waiting|pending/i.test(s)?'b-wait':'b-open';
 const statusLabel=s=>s==='Esperando la aprobación'?'Esp. aprobación':s;
 
-function populateStatusFilter(){
+function populateFilters(){
   const statuses=[...new Set(allIssues.map(i=>i.status))].sort();
   document.getElementById('fStatus').innerHTML='<option value="">Todos los estados</option>'+statuses.map(s=>`<option>${s}</option>`).join('');
+
+  const stakeholders=[...new Set(allIssues.map(i=>i.stakeholder))].sort();
+  document.getElementById('fStakeholder').innerHTML='<option value="">Todas las partes interesadas</option>'+stakeholders.map(s=>`<option>${s}</option>`).join('');
+
+  const assignees=[...new Set(allIssues.map(i=>i.assigneeDisplay))].sort();
+  document.getElementById('fAssignee').innerHTML='<option value="">Todos los asignados</option>'+assignees.map(a=>`<option>${a}</option>`).join('');
 }
 function getFiltered(){
   const fFrom=document.getElementById('fDateFrom').value, fTo=document.getElementById('fDateTo').value;
@@ -667,9 +693,12 @@ function clearDates(){ document.getElementById('fDateFrom').value=''; document.g
 function renderTable(){
   if(!allIssues.length) return;
   const fP=document.getElementById('fPriority').value, fS=document.getElementById('fStatus').value, fSL=document.getElementById('fSLA').value;
+  const fSt=document.getElementById('fStakeholder').value, fA=document.getElementById('fAssignee').value;
   let filtered=getFiltered().filter(i=>{
     if(fP&&i.priority!==fP) return false;
     if(fS&&i.status!==fS) return false;
+    if(fSt&&i.stakeholder!==fSt) return false;
+    if(fA&&i.assigneeDisplay!==fA) return false;
     if(currentView==='open'&&i.isClosed) return false;
     if(currentView==='breach'&&!i.resBreach&&!i.attnBreach) return false;
     if(currentView==='risk'&&!i.resRisk) return false;
@@ -690,8 +719,11 @@ function renderTable(){
     const cStr=i.created.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+i.created.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     const attnB=i.attnH===null?'<span class="badge b-nodata">Sin dato</span>':i.attnBreach?`<span class="badge b-breach">${fmtH(i.attnH)} Vencido</span>`:`<span class="badge b-ok">${fmtH(i.attnH)} OK</span>`;
     const resB=i.isClosed?'<span class="badge b-closed">Cerrado</span>':i.resBreach?'<span class="badge b-breach">Incumplido</span>':i.resRisk?'<span class="badge b-risk">En riesgo</span>':'<span class="badge b-ok">OK</span>';
-    return `<tr><td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td><td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td><td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td><td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${cStr}</td><td>${attnB}</td><td style="color:var(--text-secondary)">${fmtH(i.workH)}</td><td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td><td><div class="sla-wrap"><div class="sla-bg"><div class="sla-fill" style="width:${rPct}%;background:${barC}"></div></div>${resB}</div></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.assignee}</td></tr>`;
-  }).join(''):'<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>';
+    const assigneeCell=i.assigneeSource==='STI'
+      ? `${i.assigneeDisplay}<span class="src-tag" title="Asignado tomado del ticket vinculado ${i.stiKey}">(${i.stiKey})</span>`
+      : i.assigneeDisplay;
+    return `<tr><td><a href="${i.issueUrl}" class="key-link" target="_blank">${i.key}</a></td><td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${i.summary}">${i.summary}</td><td><span class="badge ${prioClass(i.priority)}">${i.priority}</span></td><td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${cStr}</td><td>${attnB}</td><td style="color:var(--text-secondary)">${fmtH(i.workH)}</td><td style="color:var(--text-secondary)">${fmtLimit(i.slaResH)}</td><td><div class="sla-wrap"><div class="sla-bg"><div class="sla-fill" style="width:${rPct}%;background:${barC}"></div></div>${resB}</div></td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${i.stakeholder}</td><td style="color:var(--text-secondary);font-size:11px;white-space:nowrap">${assigneeCell}</td></tr>`;
+  }).join(''):'<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay issues con los filtros seleccionados</td></tr>';
 }
 
 // ══════════════════════════════════════════
@@ -809,3 +841,4 @@ setInterval(()=>{ if(googleToken) loadData(); }, 5*60*1000);
 </script>
 </body>
 </html>
+
